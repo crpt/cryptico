@@ -62,16 +62,20 @@
 				try {
 					var decryptionResult = cryptico.decrypt($('#cryptedtext').val(), myRSAKey);
 					$('#cleartext').val(decryptionResult.plaintext);
-					if(decryptionResult.signature=='verified')
-					{
-						var signature = decryptionResult.publicKeyString;
-						if(signature==$('#contactkey').val())
-							$('#signature').text("signed by contact.");
+					if(decryptionResult.status=="success") {
+						if(decryptionResult.signature=='verified')
+						{
+							var signature = decryptionResult.publicKeyString;
+							if(signature==$('#contactkey').val())
+								$('#signature').text("signed by contact.");
+							else
+								$('#signature').text(decryptionResult.publicKeyString);
+						}
 						else
-							$('#signature').text(decryptionResult.publicKeyString);
+							$('#signature').text(decryptionResult.signature + " !");
+					} else {
+						$('#signature').text("decryption failed !");
 					}
-					else
-						$('#signature').text(decryptionResult.signature);
 				} catch(e) {
 					$('#cleartext').val('');
 					$('#signature').html(e.message);
@@ -80,92 +84,6 @@
 			});
 			
 		});
-		
-		
-		/*
-        function print(string)
-        {
-            document.write(string + "\n\n");
-        }
-
-        print("<h1>Unsigned:</h1>");
-        
-        var PassPhrase = "The Moon is a Harsh Mistress.";
-        var Bits = 512;
-        
-        print("Matt's passphrase: " + PassPhrase);
-        print("Bit length: " + Bits);
-        
-        var MattsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits);
-        var MattsPublicKeyString = cryptico.publicKeyString(MattsRSAkey);     
-        
-        print("Matt's public key string:");
-        print(MattsPublicKeyString);
-        
-        var PlainText = "Matt, j'écris en UTF-8";
-        
-        print("Sam's message: " + PlainText);
-        
-        var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString);
-        
-        print("The encrypted message:");
-        print(EncryptionResult.cipher);        
-        
-        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
-        
-        print("The decrypted message:");
-        print(DecryptionResult.plaintext);        
-        print("DecryptionResult.signature: " + DecryptionResult.signature);
-
-        print("<h1>Signed, good signature:</h1>");
-
-        var PassPhrase = "There Ain't No Such Thing As A Free Lunch."; 
-        var Bits = 512; 
-        var SamsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits);
-        var PlainText = "Matt, I need you to help me with my Starcraft strategy.";
-        var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString, SamsRSAkey);
-
-        print("Sam's public key ID: " + cryptico.publicKeyID(cryptico.publicKeyString(SamsRSAkey)));
-
-        print("The encrypted message:");
-        print(EncryptionResult.cipher);        
-        
-        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
-
-        print("The decrypted message:");
-        print(DecryptionResult.plaintext);        
-
-        print("DecryptionResult.signature: " + DecryptionResult.signature);
-
-        print("The signature public key string:");
-        print(DecryptionResult.publicKeyString);        
-
-        print("The signature public key ID:");
-        print(cryptico.publicKeyID(DecryptionResult.publicKeyString));        
-
-
-
-        print("<h1>Signed, forged signature:</h1>");
-
-        EncryptionResult.cipher = "MCLk/K7l2xJU7s/KfteovUJo+z+XNujMlKxpMUMAR3RE/G36VJ4seDu8GJRWmlNkjPIxs3oH431KK7lIkz3U0w==?XWaxT2vVYUKNeR5FDYfzNMYDwkBGqx27jiI4Bz3oBp+Elie5c0rJh0suYHBlPvfO"
-
-        print("The encrypted message:");
-        print(EncryptionResult.cipher);        
-        
-        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
-
-        print("The decrypted message:");
-        print(DecryptionResult.plaintext);        
-
-        print("DecryptionResult.signature: " + DecryptionResult.signature);
-
-        print("The signature public key string:");
-        print(DecryptionResult.publicKeyString);        
-
-        print("The signature public key ID:");
-        print(cryptico.publicKeyID(DecryptionResult.publicKeyString));        
-        */
-
             
         </script>
 
