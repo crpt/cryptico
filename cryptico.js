@@ -3334,6 +3334,33 @@ var cryptico = (function() {
         }   
         return string;
     }
+
+
+    // Converts a utf8string to a byte array.
+    my.utf82bytes = function(string)
+    {
+        var bytes = new Array();
+        var uriencoded = unescape(encodeURIComponent(string));
+        for(var i = 0; i < uriencoded.length; i++) 
+        {
+            bytes.push(uriencoded.charCodeAt(i));
+        }
+        my.bytes2utf8(bytes);
+        return bytes;
+    }
+
+    // Converts a byte array to a utf8string.
+    my.bytes2utf8 = function(bytes)
+    {
+        var uriencoded = "";
+        var string = ""
+        for(var i = 0; i < bytes.length; i++)
+        {
+            uriencoded += String.fromCharCode(bytes[i]);
+        }   
+        string = decodeURIComponent(escape(uriencoded));
+        return string;
+    }
     
     // Returns a XOR b, where a and b are 16-byte byte arrays.
     my.blockXOR = function(a, b)
@@ -3384,7 +3411,7 @@ var cryptico = (function() {
     {
         var exkey = key.slice(0);
         aes.ExpandKey(exkey);
-        var blocks = my.string2bytes(plaintext);
+        var blocks = my.utf82bytes(plaintext);
         blocks = my.pad16(blocks);
         var encryptedBlocks = my.blockIV();
         for(var i = 0; i < blocks.length/16; i++)
@@ -3416,7 +3443,7 @@ var cryptico = (function() {
             decryptedBlocks = decryptedBlocks.concat(tempBlock);
         }
         decryptedBlocks = my.depad(decryptedBlocks);
-        return my.bytes2string(decryptedBlocks);
+        return my.bytes2utf8(decryptedBlocks);
     }
     
     // Wraps a string to 60 characters.
