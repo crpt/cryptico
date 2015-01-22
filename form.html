@@ -1,0 +1,260 @@
+
+<html>
+
+    <head>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+        <script language="JavaScript" type="text/javascript" src="jquery-2.1.3.min.js"></script>
+        <script language="JavaScript" type="text/javascript" src="jsbn.js"></script>
+        <script language="JavaScript" type="text/javascript" src="random.js"></script>
+        <script language="JavaScript" type="text/javascript" src="hash.js"></script>
+        <script language="JavaScript" type="text/javascript" src="rsa.js"></script>
+        <script language="JavaScript" type="text/javascript" src="aes.js"></script>
+        <script language="JavaScript" type="text/javascript" src="api.js"></script>
+
+        <script>
+		
+		var bits = 512;
+		var myRSAKey = null;
+
+		$( document ).ready(function() {
+			
+			// disable crypt action on pass change
+			$('#mypass').change(function(){
+				$('.cryptaction').prop( "disabled", true );
+				$('#mypubkey').val('');
+			});
+			
+			// generate key
+			$('#validpass').click(function(){
+				var pass = $('#mypass').val();
+				if(pass.length<=5)
+					alert("Pass phrase must have more than 5 characters");
+				else
+				{
+					myRSAKey = cryptico.generateRSAKey(pass, bits);
+					$('#mypubkey').val(cryptico.publicKeyString(myRSAKey));
+					$('.cryptaction').prop( "disabled", false );
+				}
+				pass = null;
+			});
+			
+			// select on focus
+			$("textarea").focus(function(){
+				this.select();
+			});
+			
+			// encrypt
+			$('#encrypt').click(function(){
+				var sign = $('#sign').prop("checked");
+				try {
+					var encryptionResult = cryptico.encrypt($('#cleartext').val(), $('#contactkey').val(), sign?myRSAKey:null);
+					$('#cryptedtext').val(encryptionResult.cipher);
+				} catch(e) {
+					$('#cryptedtext').val('');
+					$('#signature').html(e.message);
+				}
+			});
+			
+			// decrypt
+			$('#decrypt').click(function(){
+				try {
+					var decryptionResult = cryptico.decrypt($('#cryptedtext').val(), myRSAKey);
+					$('#cleartext').val(decryptionResult.plaintext);
+					if(decryptionResult.signature=='verified')
+					{
+						var signature = decryptionResult.publicKeyString;
+						if(signature==$('#contactkey').val())
+							$('#signature').text("signed by contact.");
+						else
+							$('#signature').text(decryptionResult.publicKeyString);
+					}
+					else
+						$('#signature').text(decryptionResult.signature);
+				} catch(e) {
+					$('#cleartext').val('');
+					$('#signature').html(e.message);
+				}
+
+			});
+			
+		});
+		
+		
+		/*
+        function print(string)
+        {
+            document.write(string + "\n\n");
+        }
+
+        print("<h1>Unsigned:</h1>");
+        
+        var PassPhrase = "The Moon is a Harsh Mistress.";
+        var Bits = 512;
+        
+        print("Matt's passphrase: " + PassPhrase);
+        print("Bit length: " + Bits);
+        
+        var MattsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits);
+        var MattsPublicKeyString = cryptico.publicKeyString(MattsRSAkey);     
+        
+        print("Matt's public key string:");
+        print(MattsPublicKeyString);
+        
+        var PlainText = "Matt, j'écris en UTF-8";
+        
+        print("Sam's message: " + PlainText);
+        
+        var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString);
+        
+        print("The encrypted message:");
+        print(EncryptionResult.cipher);        
+        
+        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
+        
+        print("The decrypted message:");
+        print(DecryptionResult.plaintext);        
+        print("DecryptionResult.signature: " + DecryptionResult.signature);
+
+        print("<h1>Signed, good signature:</h1>");
+
+        var PassPhrase = "There Ain't No Such Thing As A Free Lunch."; 
+        var Bits = 512; 
+        var SamsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits);
+        var PlainText = "Matt, I need you to help me with my Starcraft strategy.";
+        var EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString, SamsRSAkey);
+
+        print("Sam's public key ID: " + cryptico.publicKeyID(cryptico.publicKeyString(SamsRSAkey)));
+
+        print("The encrypted message:");
+        print(EncryptionResult.cipher);        
+        
+        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
+
+        print("The decrypted message:");
+        print(DecryptionResult.plaintext);        
+
+        print("DecryptionResult.signature: " + DecryptionResult.signature);
+
+        print("The signature public key string:");
+        print(DecryptionResult.publicKeyString);        
+
+        print("The signature public key ID:");
+        print(cryptico.publicKeyID(DecryptionResult.publicKeyString));        
+
+
+
+        print("<h1>Signed, forged signature:</h1>");
+
+        EncryptionResult.cipher = "MCLk/K7l2xJU7s/KfteovUJo+z+XNujMlKxpMUMAR3RE/G36VJ4seDu8GJRWmlNkjPIxs3oH431KK7lIkz3U0w==?XWaxT2vVYUKNeR5FDYfzNMYDwkBGqx27jiI4Bz3oBp+Elie5c0rJh0suYHBlPvfO"
+
+        print("The encrypted message:");
+        print(EncryptionResult.cipher);        
+        
+        var DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey);
+
+        print("The decrypted message:");
+        print(DecryptionResult.plaintext);        
+
+        print("DecryptionResult.signature: " + DecryptionResult.signature);
+
+        print("The signature public key string:");
+        print(DecryptionResult.publicKeyString);        
+
+        print("The signature public key ID:");
+        print(cryptico.publicKeyID(DecryptionResult.publicKeyString));        
+        */
+
+            
+        </script>
+
+    </head>
+    
+    <body>
+		<h1>Encrypt/decrypt</h1>
+		
+		
+		<label for="mypass">My passphrase:</label>
+		<br />
+		<input type="password" name="mypass" id="mypass" size="35" />
+		<br />
+		<button id="validpass">Validate</button>
+		
+		<br />
+		<br />
+
+		<label for="mypubkey">My public key:</label>
+		<br />
+		<textarea name="mypubkey" id="mypubkey" rows="3" cols="40" readonly="true" autocomplete="off"></textarea>
+
+		<br />
+		<br />
+
+		<label for="contactkey">Contact public key:</label>
+		<br />
+		<textarea name="contactkey" id="contactkey" rows="3" cols="40"></textarea>
+
+		<br />
+		<br />
+
+		<label for="cleartext">Clear text:</label>
+		<br />
+		<textarea name="cleartext" id="cleartext" rows="10" cols="40"autocomplete="off"></textarea>
+		<br/ >
+		<span id="signature"></span>
+
+		<br />
+		<input type="checkbox" name="sign" id="sign" class="cryptaction" disabled="true" value="1" autocomplete="off"/>
+		<label for="sign">sign text</label>
+		<br />
+		<button id="encrypt" class="cryptaction" disabled="true"> v  Encrypt with contact public key v </button>
+		<br />
+		<button id="decrypt" class="cryptaction" disabled="true"> ^  Decrypt with my private key ^ </button>
+		<br />
+
+		<label for="cryptedtext">Crypted text:</label>
+		<br />
+		<textarea name="cryptedtext" id="cryptedtext" rows="10" cols="40" autocomplete="off"></textarea>
+
+		<br />
+		<br />
+
+
+
+    </body>
+    
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
