@@ -74,6 +74,8 @@
 						if(decryptionResult.signature=='verified')
 						{
 							var signature = decryptionResult.publicKeyString;
+							if($('#contactkey').val()=='')
+								$('#contactkey').val(signature);
 							if(signature==$('#contactkey').val())
 								$('#signature').text("signed by contact.");
 							else
