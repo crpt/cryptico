@@ -1,5 +1,11 @@
 # cryptico
 
+> Forked from [cryptico](https://github.com/tracker1/cryptico-js), ported to TypeScript.
+
+## Install
+
+`npm install @crpt/cryptico`
+
 ## Overview
 
 ### Generating an RSA key pair & public key string

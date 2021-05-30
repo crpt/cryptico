@@ -1,8 +1,8 @@
 {
-  "name": "cryptico-js",
+  "name": "@crpt/cryptico",
   "version": "2.0.0-alpha0",
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico)",
-  "main": "./lib/cryptico.js",
+  "main": "./lib/cryptico.ts",
   "scripts": {
     "postinstall": "npm dedupe",
     "start": "gulp",
@@ -13,11 +13,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tracker1/cryptico-js.git"
+    "url": "https://github.com/crpt/cryptico.git"
   },
-  "author": "Michael J. Ryan <tracker1@gmail.com>",
+  "author": "Nex Zhu <hitnexup@gmail.com>",
   "license": "ISC",
   "contributors": [
+    {
+      "name": "Michael J. Ryan",
+      "email": "tracker1@gmail.com"
+    },
     {
       "name": "Rye Terrell",
       "email": "ryeterrell@ryeterrell.net"
@@ -36,12 +40,13 @@
     "public-key",
     "private-key",
     "AES",
-    "RSA"
+    "RSA",
+    "TypeScript"
   ],
   "bugs": {
-    "url": "https://github.com/tracker1/cryptico-js/issues"
+    "url": "https://github.com/crpt/cryptico/issues"
   },
-  "homepage": "https://github.com/tracker1/cryptico-js",
+  "homepage": "https://github.com/crpt/cryptico",
   "devDependencies": {
     "gulp": "^3.8.6",
     "gulp-browserify": "^0.5.0",
