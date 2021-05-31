@@ -4,13 +4,13 @@
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico)",
   "main": "./lib/cryptico.ts",
   "scripts": {
-    "postinstall": "npm dedupe",
-    "start": "gulp",
-    "build": "gulp",
-    "publish-major": "npm run build && git commit -am pre-publish-build && npm version major && npm publish && git push origin master && git push origin master --tags",
-    "publish-minor": "npm run build && git commit -am pre-publish-build && npm version minor && npm publish && git push origin master && git push origin master --tags",
-    "publish-patch": "npm run build && git commit -am pre-publish-build && npm version patch && npm publish && git push origin master && git push origin master --tags"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "lint": "eslint '{src,test}/**/*.js'",
+    "lint:fix": "eslint '{src,test}/**/*.js' --fix"
   },
+  "prettier": "@daotl/prettier-config",
   "repository": {
     "type": "git",
     "url": "https://github.com/crpt/cryptico.git"
@@ -48,11 +48,8 @@
   },
   "homepage": "https://github.com/crpt/cryptico",
   "devDependencies": {
-    "gulp": "^3.8.6",
-    "gulp-browserify": "^0.5.0",
-    "gulp-concat": "^2.3.4",
-    "gulp-header": "^1.0.5",
-    "gulp-rename": "^1.2.0",
-    "gulp-uglify": "^0.3.1"
+    "@daotl/eslint-config": "^0.1.1",
+    "@types/node": "^15.6.1",
+    "vite": "^2.3.4"
   }
 }
