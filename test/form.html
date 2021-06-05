@@ -1,187 +1,185 @@
-
 <html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script
+      language="JavaScript"
+      type="text/javascript"
+      src="../dist/cryptico.umd.js"
+    ></script>
+    <script
+      language="JavaScript"
+      type="text/javascript"
+      src="jquery-2.1.3.min.js"
+    ></script>
 
-    <head>
+    <script>
+      const bits = 512
+      let myRSAKey
 
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<meta name=viewport content="width=device-width, initial-scale=1">
-		<script language="JavaScript" type="text/javascript" src="../dist/cryptico.umd.js"></script>
-        <script language="JavaScript" type="text/javascript" src="jquery-2.1.3.min.js"></script>
+      $(document).ready(function () {
+        // disable crypt action on pass change
+        $('#mypass').change(function () {
+          $('.cryptaction').prop('disabled', true)
+          $('#mypubkey').val('')
+        })
 
-        <script>
+        // generate key
+        $('#validpass').click(function () {
+          const name = $('#myname').val()
+          let pass = $('#mypass').val()
+          if (pass.length <= 5) {
+            alert('Pass phrase must have more than 5 characters')
+            pass = null
+            return
+          }
+          if (name.length == 0) {
+            alert('You have to enter your name')
+            pass = null
+            return
+          }
+          myRSAKey = cryptico.generateRSAKey(name + '/' + pass, bits)
+          $('#mypubkey').val(cryptico.publicKeyString(myRSAKey))
+          $('.cryptaction').prop('disabled', false)
+          pass = null
+        })
 
-		var bits = 512;
-		var myRSAKey = null;
+        // select on focus
+        $('textarea').focus(function () {
+          this.select()
+        })
 
-		$( document ).ready(function() {
+        // encrypt
+        $('#encrypt').click(function () {
+          const sign = $('#sign').prop('checked')
+          try {
+            const encryptionResult = cryptico.encrypt(
+              $('#cleartext').val(),
+              $('#mypubkey').val(),
+              sign ? myRSAKey : null,
+            )
+            $('#cryptedtext').val(encryptionResult.cipher)
+          } catch (e) {
+            $('#cryptedtext').val('')
+            $('#signature').html(e.message)
+          }
+        })
 
-			// disable crypt action on pass change
-			$('#mypass').change(function(){
-				$('.cryptaction').prop( "disabled", true );
-				$('#mypubkey').val('');
-			});
+        // decrypt
+        $('#decrypt').click(function () {
+          try {
+            const decryptionResult = cryptico.decrypt(
+              $('#cryptedtext').val(),
+              myRSAKey,
+            )
+            $('#cleartext').val(decryptionResult.plaintext)
+            if (decryptionResult.status == 'success') {
+              if (decryptionResult.signature == 'verified') {
+                const signature = decryptionResult.publicKeyString
+                if ($('#signerkey').val() == '') $('#signerkey').val(signature)
+                if (signature == $('#signerkey').val())
+                  $('#signature').text('signed.')
+                else $('#signature').text(decryptionResult.publicKeyString)
+              } else $('#signature').text(decryptionResult.signature + ' !')
+            } else {
+              $('#signature').text('decryption failed !')
+            }
+          } catch (e) {
+            $('#cleartext').val('')
+            $('#signature').html(e.message)
+          }
+        })
+      })
+    </script>
+  </head>
 
-			// generate key
-			$('#validpass').click(function(){
-				var name = $('#myname').val();
-				var pass = $('#mypass').val();
-				if(pass.length<=5)
-				{
-					alert("Pass phrase must have more than 5 characters");
-					pass = null;
-					return;
-				}
-				if(name.length==0)
-				{
-					alert("You have to enter your name");
-					pass = null;
-					return;
-				}
-				myRSAKey = cryptico.generateRSAKey(name + '/' + pass, bits);
-				$('#mypubkey').val(cryptico.publicKeyString(myRSAKey));
-				$('.cryptaction').prop( "disabled", false );
-				pass = null;
-			});
+  <body style="max-width: 480px; font-family: sans-serif">
+    <h1>Encrypt/decrypt</h1>
 
-			// select on focus
-			$("textarea").focus(function(){
-				this.select();
-			});
+    <label for="myname">My name:</label>
+    <br />
+    <input type="text" name="myname" id="myname" style="width: 100%" />
+    <br />
+    <label for="mypass">My passphrase:</label>
+    <br />
+    <input type="password" name="mypass" id="mypass" style="width: 100%" />
+    <br />
+    <button id="validpass">Validate</button>
 
-			// encrypt
-			$('#encrypt').click(function(){
-				var sign = $('#sign').prop("checked");
-				try {
-					var encryptionResult = cryptico.encrypt($('#cleartext').val(), $('#mypubkey').val(), sign?myRSAKey:null);
-					$('#cryptedtext').val(encryptionResult.cipher);
-				} catch(e) {
-					$('#cryptedtext').val('');
-					$('#signature').html(e.message);
-				}
-			});
+    <br />
+    <br />
 
-			// decrypt
-			$('#decrypt').click(function(){
-				try {
-					var decryptionResult = cryptico.decrypt($('#cryptedtext').val(), myRSAKey);
-					$('#cleartext').val(decryptionResult.plaintext);
-					if(decryptionResult.status=="success") {
-						if(decryptionResult.signature=='verified')
-						{
-							var signature = decryptionResult.publicKeyString;
-							if($('#signerkey').val()=='')
-								$('#signerkey').val(signature);
-							if(signature==$('#signerkey').val())
-								$('#signature').text("signed.");
-							else
-								$('#signature').text(decryptionResult.publicKeyString);
-						}
-						else
-							$('#signature').text(decryptionResult.signature + " !");
-					} else {
-						$('#signature').text("decryption failed !");
-					}
-				} catch(e) {
-					$('#cleartext').val('');
-					$('#signature').html(e.message);
-				}
+    <label for="mypubkey">My public key:</label>
+    <br />
+    <textarea
+      name="mypubkey"
+      id="mypubkey"
+      rows="3"
+      style="width: 100%"
+      readonly="true"
+      autocomplete="off"
+    ></textarea>
 
-			});
+    <br />
+    <br />
 
-		});
+    <label for="signerkey">Signer's public key:</label>
+    <br />
+    <textarea
+      name="signerkey"
+      id="signerkey"
+      disabled
+      rows="3"
+      style="width: 100%"
+    ></textarea>
 
-        </script>
+    <br />
+    <br />
 
-    </head>
+    <label for="cleartext">Clear text:</label>
+    <br />
+    <textarea
+      name="cleartext"
+      id="cleartext"
+      rows="10"
+      style="width: 100%"
+      autocomplete="off"
+    ></textarea>
+    <br />
+    <span id="signature" style="width: 100%"></span>
 
-    <body style="max-width:480px;font-family:sans-serif;">
-		<h1>Encrypt/decrypt</h1>
+    <br />
+    <input
+      type="checkbox"
+      name="sign"
+      id="sign"
+      class="cryptaction"
+      disabled="true"
+      value="1"
+      autocomplete="off"
+    />
+    <label for="sign">sign text</label>
+    <br />
+    <button id="encrypt" class="cryptaction" disabled="true">
+      v Encrypt with my public key v
+    </button>
+    <br />
+    <button id="decrypt" class="cryptaction" disabled="true">
+      ^ Decrypt with my private key ^
+    </button>
+    <br />
 
+    <label for="cryptedtext">Crypted text:</label>
+    <br />
+    <textarea
+      name="cryptedtext"
+      id="cryptedtext"
+      rows="10"
+      style="width: 100%"
+      autocomplete="off"
+    ></textarea>
 
-		<label for="myname">My name:</label>
-		<br />
-		<input type="text" name="myname" id="myname"  style="width:100%;" />
-		<br />
-		<label for="mypass">My passphrase:</label>
-		<br />
-		<input type="password" name="mypass" id="mypass"  style="width:100%;" />
-		<br />
-		<button id="validpass">Validate</button>
-
-		<br />
-		<br />
-
-		<label for="mypubkey">My public key:</label>
-		<br />
-		<textarea name="mypubkey" id="mypubkey" rows="3" style="width:100%;" readonly="true" autocomplete="off"></textarea>
-
-		<br />
-		<br />
-
-		<label for="signerkey">Signer's public key:</label>
-		<br />
-		<textarea name="signerkey" id="signerkey" disabled rows="3" style="width:100%;"></textarea>
-
-		<br />
-		<br />
-
-		<label for="cleartext">Clear text:</label>
-		<br />
-		<textarea name="cleartext" id="cleartext" rows="10" style="width:100%;" autocomplete="off"></textarea>
-		<br/ >
-		<span id="signature" style="width:100%;"></span>
-
-		<br />
-		<input type="checkbox" name="sign" id="sign" class="cryptaction" disabled="true" value="1" autocomplete="off"/>
-		<label for="sign">sign text</label>
-		<br />
-		<button id="encrypt" class="cryptaction" disabled="true"> v  Encrypt with my public key v </button>
-		<br />
-		<button id="decrypt" class="cryptaction" disabled="true"> ^  Decrypt with my private key ^ </button>
-		<br />
-
-		<label for="cryptedtext">Crypted text:</label>
-		<br />
-		<textarea name="cryptedtext" id="cryptedtext" rows="10" style="width:100%;" autocomplete="off"></textarea>
-
-		<br />
-		<br />
-
-
-
-    </body>
-
+    <br />
+    <br />
+  </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
