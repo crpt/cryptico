@@ -134,6 +134,28 @@ export default {
     return str
   },
 
+  // Converts a UTF-8 string to ASCII string.
+  utf82string(string) {
+    return unescape(encodeURIComponent(string))
+  },
+
+  // Converts ascii string to a UTF-8 string.
+  string2utf8(uriencoded) {
+    return decodeURIComponent(escape(uriencoded))
+  },
+
+  // Converts a UTF-8 string to a byte array.
+  utf82bytes(string) {
+    const uriencoded = unescape(encodeURIComponent(string))
+    return this.string2bytes(uriencoded)
+  },
+
+  // Converts a byte array to a UTF-8 string.
+  bytes2utf8(bytes) {
+    const uriencoded = this.bytes2string(bytes)
+    return decodeURIComponent(escape(uriencoded))
+  },
+
   // Returns a XOR b, where a and b are 16-byte byte arrays.
   blockXOR(a, b) {
     const xor = new Array(16)
@@ -175,7 +197,7 @@ export default {
   encryptAESCBC(plaintext, key) {
     const exkey = key.slice(0)
     aes.ExpandKey(exkey)
-    let blocks = this.string2bytes(plaintext)
+    let blocks = this.utf82bytes(plaintext)
     blocks = this.pad16(blocks)
     let encryptedBlocks = this.blockIV()
     for (let i = 0; i < blocks.length / 16; i++) {
@@ -204,7 +226,7 @@ export default {
       decryptedBlocks = decryptedBlocks.concat(tempBlock)
     }
     decryptedBlocks = this.depad(decryptedBlocks)
-    return this.bytes2string(decryptedBlocks)
+    return this.bytes2utf8(decryptedBlocks)
   },
 
   // Wraps a str to 60 characters.
@@ -283,9 +305,9 @@ export default {
       return { status: 'failure' }
     }
     aeskey = this.string2bytes(aeskey)
-    const plaintext = this
-      .decryptAESCBC(cipherblock[1], aeskey)
-      .split('::52cee64bb3a38f6403386519a39ac91c::')
+    const plaintext = this.decryptAESCBC(cipherblock[1], aeskey).split(
+      '::52cee64bb3a38f6403386519a39ac91c::',
+    )
     if (plaintext.length === 3) {
       const publickey = this.publicKeyFromString(plaintext[1])
       const signature = this.b64to16(plaintext[2])
