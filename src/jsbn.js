@@ -5,7 +5,7 @@
 
 // (public) Constructor
 
-import {math} from "./random";
+import { math } from './random'
 
 export function BigInteger(a, b, c) {
   if (a)
@@ -67,7 +67,7 @@ export function int2char(n) {
 
 function intAt(s, i) {
   var c = BI_RC[s.charCodeAt(i)]
-  return (c == null) ? -1 : c
+  return c == null ? -1 : c
 }
 
 // (protected) copy this to r
