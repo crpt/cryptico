@@ -6,6 +6,7 @@ import { RSAKey } from './rsa'
 
 const base64Chars =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+const magic = '::52cee64bb3a38f6403386519a39ac91c::'
 
 aes.Init()
 
@@ -285,12 +286,10 @@ export default {
         return { status: 'Invalid public key' }
       }
       if (signingkey) {
-        const signString = cryptico.b16to64(
-          signingkey.signString(plaintext, 'sha256'),
-        )
-        plaintext += '::52cee64bb3a38f6403386519a39ac91c::'
-        plaintext += cryptico.publicKeyString(signingkey)
-        plaintext += '::52cee64bb3a38f6403386519a39ac91c::'
+        const signString = this.sign(plaintext, signingkey)
+        plaintext += magic
+        plaintext += this.publicKeyString(signingkey)
+        plaintext += magic
         plaintext += signString
       }
       cipherblock += this.encryptAESCBC(plaintext, aeskey)
@@ -305,45 +304,19 @@ export default {
       return { status: 'failure' }
     }
     aeskey = this.string2bytes(aeskey)
-    const plaintext = this.decryptAESCBC(cipherblock[1], aeskey).split(
-      '::52cee64bb3a38f6403386519a39ac91c::',
-    )
-    if (plaintext.length === 3) {
-      const publickey = this.publicKeyFromString(plaintext[1])
-      const signature = this.b64to16(plaintext[2])
-      if (publickey.verifyString(plaintext[0], signature)) {
-        return {
-          status: 'success',
-          plaintext: plaintext[0],
-          signature: 'verified',
-          publicKeyString: this.publicKeyString(publickey),
-        }
-      } else {
-        return {
-          status: 'success',
-          plaintext: plaintext[0],
-          signature: 'forged',
-          publicKeyString: this.publicKeyString(publickey),
-        }
-      }
-    } else {
+    const plaintext = this.decryptAESCBC(cipherblock[1], aeskey).split(magic)
+    if (plaintext.length > 1) {
+      return this._confirm(plaintext)
+    } else
       return {
         status: 'success',
         plaintext: plaintext[0],
         signature: 'unsigned',
       }
-    }
   },
 
   sign(plaintext, signingkey) {
-    const signString = cryptico.b16to64(
-      signingkey.signString(plaintext, 'sha256'),
-    )
-    plaintext += '::52cee64bb3a38f6403386519a39ac91c::'
-    plaintext += cryptico.publicKeyString(signingkey)
-    plaintext += '::52cee64bb3a38f6403386519a39ac91c::'
-    plaintext += signString
-    return plaintext
+    return this.b16to64(signingkey.signString(plaintext, 'sha256'))
   },
 
   verify(plaintext) {
@@ -352,7 +325,6 @@ export default {
   },
 
   _confirm(plaintext) {
-    plaintext = plaintext.split('::52cee64bb3a38f6403386519a39ac91c::')
     if (plaintext.length === 3) {
       const publickey = this.publicKeyFromString(plaintext[1])
       const signature = this.b64to16(plaintext[2])

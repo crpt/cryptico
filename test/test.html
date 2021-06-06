@@ -44,6 +44,7 @@
       print(DecryptionResult.plaintext)
       print('DecryptionResult.signature: ' + DecryptionResult.signature)
 
+
       print('<h1>Signed, good signature:</h1>')
 
       PassPhrase = "There Ain't No Such Thing As A Free Lunch."
@@ -63,10 +64,7 @@
       print('The encrypted message:')
       print(EncryptionResult.cipher)
 
-      DecryptionResult = cryptico.decrypt(
-        EncryptionResult.cipher,
-        MattsRSAkey,
-      )
+      DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey)
 
       print('The decrypted message:')
       print(DecryptionResult.plaintext)
@@ -79,30 +77,29 @@
       print('The signature public key ID:')
       print(cryptico.publicKeyID(DecryptionResult.publicKeyString))
 
-      /* TODO: fix forged signature test */
+
       print('<h1>Signed, forged signature:</h1>')
 
-      const ForgersRSAkey = cryptico.generateRSAKey(PassPhrase, Bits)
-      const ForgedEncryptionResult = cryptico.encrypt(
-        PlainText,
-        MattsPublicKeyString,
-        ForgersRSAkey,
-      )
+      const ForgersPassPhrase = 'There Is Such Thing As A Free Lunch.'
+      const ForgersRSAkey = cryptico.generateRSAKey(ForgersPassPhrase, Bits)
 
       print(
         "Forger's public key ID: " +
           cryptico.publicKeyID(cryptico.publicKeyString(ForgersRSAkey)),
       )
 
-      EncryptionResult.cipher = ForgedEncryptionResult.cipher
+      // const ForgedEncryptionResult = cryptico.encrypt(
+      //   PlainText,
+      //   MattsPublicKeyString,
+      //   ForgersRSAkey,
+      // )
+      EncryptionResult.cipher =
+        'KX2HnktN2B/PeYLlaQRLYDzIE8AV4lF03jK9CQ6bHrcs9IADIgAvJmaE0kGaxLXznULzsBI+d47d/5d7udUpDQ==?4/HL1YamY11E6vr6MkR+AtGKmO+Gjq7XBZuCRf8MpeFI1HcI/wNYNs+NCWRH2/yBDZ8Hp0jROtfIhQ8sQHPDLWmCHG+YgbFQsjzVEAqeDdfJyvv7DA61peJGa4/q58DLraHYo8QveiV6sXVtUq91jrxabgZ/N6Wr60/qj5pNWwS/q9Bv+wwnwTlQWikVNy3fxmoutH71OLbGJl7kZ/sDA3NScbuH8/TGmEtj906qXWmDdLUjN60GS7fFPsgX1p6Tff9DNrhqpzQXg90X3UgZet+BK/61IG0vadTHRx9I045CaqZkuzdNIQvdtdeoSUnWutME9CkPg1E5krv8F0Rb/qTQupn2a/PNaHRHh66brbOAzUf4ebx+69WX7PxYI7H3Rxibf75fQoqbv4rGHYTa4kF3LbrXNMcjouTNoyLg3xtt6psaPj5sY+ze1O/iwZXR9kVRiEAQyCP9UnNFTGRobg=='
 
       print('The encrypted message:')
       print(EncryptionResult.cipher)
 
-      DecryptionResult = cryptico.decrypt(
-        EncryptionResult.cipher,
-        MattsRSAkey,
-      )
+      DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey)
 
       print('The decrypted message:')
       print(DecryptionResult.plaintext)
