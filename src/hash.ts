@@ -119,7 +119,7 @@ function SHA256(s) {
   }
 
   function str2binb(str) {
-    const bin = Array()
+    const bin = []
     const mask = (1 << chrsz) - 1
     for (let i = 0; i < str.length * chrsz; i += chrsz) {
       bin[i >> 5] |= (str.charCodeAt(i / chrsz) & mask) << (24 - (i % 32))
@@ -424,7 +424,7 @@ export function MD5(str) {
     return WordToHexValue
   }
 
-  let x = Array()
+  let x = []
   let k, AA, BB, CC, DD, a, b, c, d
   const S11 = 7,
     S12 = 12,

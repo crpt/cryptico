@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
-  extends: ['@daotl/eslint-config'],
+  extends: ['@daotl/eslint-config/typescript'],
   parserOptions: {
-    sourceType: "module",
+    project: 'tsconfig.json',
   },
 }

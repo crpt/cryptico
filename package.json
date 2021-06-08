@@ -7,8 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "lint": "eslint '{src,test}/**/*.js'",
-    "lint:fix": "eslint '{src,test}/**/*.js' --fix"
+    "lint": "eslint '{src,test}/**/*.ts'",
+    "lint:fix": "eslint '{src,test}/**/*.ts' --fix"
   },
   "prettier": "@daotl/prettier-config",
   "repository": {
@@ -50,6 +50,7 @@
   "devDependencies": {
     "@daotl/eslint-config": "^0.1.1",
     "@types/node": "^15.6.1",
+    "typescript": "^4.3.2",
     "vite": "^2.3.4"
   }
 }
