@@ -1,5 +1,9 @@
 // From: https://github.com/tracker1/cryptico-js/blob/57b32417967b9c9b75c47c04971f72a120b59a67/src/hash.js
 
+import { ByteArray } from './type'
+
+export type HashFunc = (s: string) => string
+
 /**
  *
  *  Secure Hash Algorithm (SHA256)
@@ -8,43 +12,42 @@
  *  Original code by Angel Marin, Paul Johnston.
  *
  **/
-
-function SHA256(s) {
+function SHA256(s: string): string {
   const chrsz = 8
   const hexcase = 0
 
-  function safe_add(x, y) {
+  function safe_add(x: number, y: number): number {
     const lsw = (x & 0xffff) + (y & 0xffff)
     const msw = (x >> 16) + (y >> 16) + (lsw >> 16)
     return (msw << 16) | (lsw & 0xffff)
   }
 
-  function S(X, n) {
+  function S(X: number, n: number): number {
     return (X >>> n) | (X << (32 - n))
   }
-  function R(X, n) {
+  function R(X: number, n: number): number {
     return X >>> n
   }
-  function Ch(x, y, z) {
+  function Ch(x: number, y: number, z: number): number {
     return (x & y) ^ (~x & z)
   }
-  function Maj(x, y, z) {
+  function Maj(x: number, y: number, z: number): number {
     return (x & y) ^ (x & z) ^ (y & z)
   }
-  function Sigma0256(x) {
+  function Sigma0256(x: number): number {
     return S(x, 2) ^ S(x, 13) ^ S(x, 22)
   }
-  function Sigma1256(x) {
+  function Sigma1256(x: number): number {
     return S(x, 6) ^ S(x, 11) ^ S(x, 25)
   }
-  function Gamma0256(x) {
+  function Gamma0256(x: number): number {
     return S(x, 7) ^ S(x, 18) ^ R(x, 3)
   }
-  function Gamma1256(x) {
+  function Gamma1256(x: number): number {
     return S(x, 17) ^ S(x, 19) ^ R(x, 10)
   }
 
-  function core_sha256(m, l) {
+  function core_sha256(m: ByteArray, l: number): ByteArray {
     const K = [
       0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
       0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -118,8 +121,8 @@ function SHA256(s) {
     return HASH
   }
 
-  function str2binb(str) {
-    const bin = []
+  function str2binb(str: string): ByteArray {
+    const bin: ByteArray = []
     const mask = (1 << chrsz) - 1
     for (let i = 0; i < str.length * chrsz; i += chrsz) {
       bin[i >> 5] |= (str.charCodeAt(i / chrsz) & mask) << (24 - (i % 32))
@@ -127,7 +130,7 @@ function SHA256(s) {
     return bin
   }
 
-  function binb2hex(binarray) {
+  function binb2hex(binarray: ByteArray): string {
     const hex_tab = hexcase ? '0123456789ABCDEF' : '0123456789abcdef'
     let str = ''
     for (let i = 0; i < binarray.length * 4; i++) {
@@ -143,9 +146,7 @@ function SHA256(s) {
 }
 
 export const sha256 = {
-  hex(s) {
-    return SHA256(s)
-  },
+  hex: <HashFunc>((s: string) => SHA256(s)),
 }
 
 /**
@@ -154,20 +155,18 @@ export const sha256 = {
  *  http://www.webtoolkit.info/
  *
  **/
-
-function SHA1(msg) {
-  function rotate_left(n, s) {
+function SHA1(msg: string): string {
+  function rotate_left(n: number, s: number): number {
     const t4 = (n << s) | (n >>> (32 - s))
     return t4
   }
 
-  // function lsb_hex(val) {
+  // function lsb_hex(val: number): string {
   //   let str = ''
-  //   let i
   //   let vh
   //   let vl
   //
-  //   for (i = 0; i <= 6; i += 2) {
+  //   for (let i = 0; i <= 6; i += 2) {
   //     vh = (val >>> (i * 4 + 4)) & 0x0f
   //     vl = (val >>> (i * 4)) & 0x0f
   //     str += vh.toString(16) + vl.toString(16)
@@ -175,12 +174,11 @@ function SHA1(msg) {
   //   return str
   // }
 
-  function cvt_hex(val) {
+  function cvt_hex(val: number): string {
     let str = ''
-    let i
     let v
 
-    for (i = 7; i >= 0; i--) {
+    for (let i = 7; i >= 0; i--) {
       v = (val >>> (i * 4)) & 0x0f
       str += v.toString(16)
     }
@@ -314,9 +312,7 @@ function SHA1(msg) {
 }
 
 export const sha1 = {
-  hex(s) {
-    return SHA1(s)
-  },
+  hex: <HashFunc>((s: string) => SHA1(s)),
 }
 
 /**
@@ -325,13 +321,12 @@ export const sha1 = {
  *  http://www.webtoolkit.info/
  *
  **/
-
-export function MD5(str) {
-  function RotateLeft(lValue, iShiftBits) {
+export function MD5(str: string): string {
+  function RotateLeft(lValue: number, iShiftBits: number): number {
     return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits))
   }
 
-  function AddUnsigned(lX, lY) {
+  function AddUnsigned(lX: number, lY: number): number {
     const lX8 = lX & 0x80000000
     const lY8 = lY & 0x80000000
     const lX4 = lX & 0x40000000
@@ -351,47 +346,79 @@ export function MD5(str) {
     }
   }
 
-  function F(x, y, z) {
+  function F(x: number, y: number, z: number): number {
     return (x & y) | (~x & z)
   }
-  function G(x, y, z) {
+  function G(x: number, y: number, z: number): number {
     return (x & z) | (y & ~z)
   }
-  function H(x, y, z) {
+  function H(x: number, y: number, z: number): number {
     return x ^ y ^ z
   }
-  function I(x, y, z) {
+  function I(x: number, y: number, z: number): number {
     return y ^ (x | ~z)
   }
 
-  function FF(a, b, c, d, x, s, ac) {
+  function FF(
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    x: number,
+    s: number,
+    ac: number,
+  ): number {
     a = AddUnsigned(a, AddUnsigned(AddUnsigned(F(b, c, d), x), ac))
     return AddUnsigned(RotateLeft(a, s), b)
   }
 
-  function GG(a, b, c, d, x, s, ac) {
+  function GG(
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    x: number,
+    s: number,
+    ac: number,
+  ): number {
     a = AddUnsigned(a, AddUnsigned(AddUnsigned(G(b, c, d), x), ac))
     return AddUnsigned(RotateLeft(a, s), b)
   }
 
-  function HH(a, b, c, d, x, s, ac) {
+  function HH(
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    x: number,
+    s: number,
+    ac: number,
+  ): number {
     a = AddUnsigned(a, AddUnsigned(AddUnsigned(H(b, c, d), x), ac))
     return AddUnsigned(RotateLeft(a, s), b)
   }
 
-  function II(a, b, c, d, x, s, ac) {
+  function II(
+    a: number,
+    b: number,
+    c: number,
+    d: number,
+    x: number,
+    s: number,
+    ac: number,
+  ): number {
     a = AddUnsigned(a, AddUnsigned(AddUnsigned(I(b, c, d), x), ac))
     return AddUnsigned(RotateLeft(a, s), b)
   }
 
-  function ConvertToWordArray(str) {
+  function ConvertToWordArray(str: string): ByteArray {
     let lWordCount
     const lMessageLength = str.length
     const lNumberOfWords_temp1 = lMessageLength + 8
     const lNumberOfWords_temp2 =
       (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64
     const lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16
-    const lWordArray = Array(lNumberOfWords - 1)
+    const lWordArray: ByteArray = Array<number>(lNumberOfWords - 1)
     let lBytePosition = 0
     let lByteCount = 0
     while (lByteCount < lMessageLength) {
@@ -409,7 +436,7 @@ export function MD5(str) {
     return lWordArray
   }
 
-  function WordToHex(lValue) {
+  function WordToHex(lValue: number): string {
     let WordToHexValue = '',
       WordToHexValue_temp = '',
       lByte,
@@ -424,7 +451,6 @@ export function MD5(str) {
     return WordToHexValue
   }
 
-  let x = []
   let k, AA, BB, CC, DD, a, b, c, d
   const S11 = 7,
     S12 = 12,
@@ -445,7 +471,7 @@ export function MD5(str) {
 
   str = Utf8Encode(str)
 
-  x = ConvertToWordArray(str)
+  const x = ConvertToWordArray(str)
 
   a = 0x67452301
   b = 0xefcdab89
@@ -532,7 +558,7 @@ export function MD5(str) {
   return temp.toLowerCase()
 }
 
-function Utf8Encode(str) {
+function Utf8Encode(str: string): string {
   str = str.replace(/\r\n/g, '\n')
   let utftext = ''
 

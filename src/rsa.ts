@@ -6,11 +6,11 @@ import { BigInteger } from './jsbn'
 import { SecureRandom, SeededRandom } from './random'
 import { sha1, sha256 } from './hash'
 
-export function parseBigInt(str, r) {
+export function parseBigInt(str: string, r: number): BigInteger {
   return new BigInteger(str, r)
 }
 
-export function linebrk(s, n) {
+export function linebrk(s: string, n: number): string {
   let ret = ''
   let i = 0
   while (i + n < s.length) {
@@ -20,14 +20,13 @@ export function linebrk(s, n) {
   return ret + s.substring(i, s.length)
 }
 
-export function byte2Hex(b) {
+export function byte2Hex(b: number): string {
   if (b < 0x10) return '0' + b.toString(16)
   else return b.toString(16)
 }
 
 // PKCS#1 (type 2, random) pad input string s to n bytes, and return a bigint
-
-export function pkcs1pad2(s, n) {
+export function pkcs1pad2(s: string, n: number): BigInteger {
   if (n < s.length + 11) {
     // TODO: fix for utf-8
     //throw "Message too long for RSA (n=" + n + ", l=" + s.length + ")"
@@ -64,94 +63,197 @@ export function pkcs1pad2(s, n) {
   return new BigInteger(ba)
 }
 
+type RSAKeyKey = 'n' | 'e' | 'd' | 'p' | 'q' | 'dmp1' | 'dmq1' | 'coeff'
+
 // "empty" RSA key constructor
+export class RSAKey {
+  n = new BigInteger()
+  e = 0
+  private d = new BigInteger()
+  private p = new BigInteger()
+  private q = new BigInteger()
+  private dmp1 = new BigInteger()
+  private dmq1 = new BigInteger()
+  private coeff = new BigInteger()
 
-export function RSAKey() {
-  this.n = null
-  this.e = 0
-  this.d = null
-  this.p = null
-  this.q = null
-  this.dmp1 = null
-  this.dmq1 = null
-  this.coeff = null
-}
-// Set the public key fields N and e from hex strings
+  // Return the PKCS#1 RSA encryption of "text" as a Base64-encoded string
+  // encryptB64(text: string): string | null {
+  //   const h = this.encrypt(text)
+  //   if (h) return hex2b64(h)
+  //   else return null
+  // }
 
-export function RSASetPublic(N, E) {
-  if (N && E) {
-    this.n = parseBigInt(N, 16)
+  // Set the public key fields N and e from hex strings
+  setPublic(N: string, E: string): void {
+    if (N && E) {
+      this.n = parseBigInt(N, 16)
+      this.e = parseInt(E, 16)
+    } else throw 'Invalid RSA public key'
+  }
+
+  // Perform raw public operation on "x": return x^e (mod n)
+  doPublic(x: BigInteger): BigInteger {
+    return x.modPowInt(this.e, this.n)
+  }
+
+  // Return the PKCS#1 RSA encryption of "text" as an even-length hex string
+  encrypt(text: string): string {
+    const m = pkcs1pad2(text, (this.n.bitLength() + 7) >> 3)
+    // if (!m) return null
+    const c = this.doPublic(m)
+    // if (!c) return null
+    const h = c.toString(16)
+    if ((h.length & 1) === 0) return h
+    else return '0' + h
+  }
+
+  // Set the private key fields N, e, and d from hex strings
+  setPrivate(N: string, E: string, D: string): void {
+    if (!N && !E && N.length > 0 && E.length > 0) {
+      this.n = parseBigInt(N, 16)
+      this.e = parseInt(E, 16)
+      this.d = parseBigInt(D, 16)
+    } else throw 'Invalid RSA private key'
+  }
+
+  // Set the private key fields N, e, d and CRT params from hex strings
+  setPrivateEx(
+    N: string,
+    E: string,
+    D: string,
+    P: string,
+    Q: string,
+    DP: string,
+    DQ: string,
+    C: string,
+  ): void {
+    if (!N && !E && N.length > 0 && E.length > 0) {
+      this.n = parseBigInt(N, 16)
+      this.e = parseInt(E, 16)
+      this.d = parseBigInt(D, 16)
+      this.p = parseBigInt(P, 16)
+      this.q = parseBigInt(Q, 16)
+      this.dmp1 = parseBigInt(DP, 16)
+      this.dmq1 = parseBigInt(DQ, 16)
+      this.coeff = parseBigInt(C, 16)
+    } else throw new Error('Invalid RSA private key')
+  }
+
+  // Generate a new random private key B bits long, using public expt E
+  generate(B: number, E: string): void {
+    const rng = new SeededRandom()
+    const qs = B >> 1
     this.e = parseInt(E, 16)
-  } else throw 'Invalid RSA public key'
-}
+    const ee = new BigInteger(E, 16)
+    for (;;) {
+      for (;;) {
+        this.p = new BigInteger(B - qs, 1, rng)
+        if (
+          this.p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) ===
+            0 &&
+          this.p.isProbablePrime(10)
+        )
+          break
+      }
+      for (;;) {
+        this.q = new BigInteger(qs, 1, rng)
+        if (
+          this.q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) ===
+            0 &&
+          this.q.isProbablePrime(10)
+        )
+          break
+      }
+      if (this.p.compareTo(this.q) <= 0) {
+        const t = this.p
+        this.p = this.q
+        this.q = t
+      }
+      const p1 = this.p.subtract(BigInteger.ONE)
+      const q1 = this.q.subtract(BigInteger.ONE)
+      const phi = p1.multiply(q1)
+      if (phi.gcd(ee).compareTo(BigInteger.ONE) === 0) {
+        this.n = this.p.multiply(this.q)
+        this.d = ee.modInverse(phi)
+        this.dmp1 = this.d.mod(p1)
+        this.dmq1 = this.d.mod(q1)
+        this.coeff = this.q.modInverse(this.p)
+        break
+      }
+    }
+  }
 
-// Perform raw public operation on "x": return x^e (mod n)
+  // Perform raw private operation on "x": return x^d (mod n)
+  protected doPrivate(x: BigInteger): BigInteger {
+    if (!this.p || !this.q) return x.modPow(this.d, this.n)
+    // TODO: re-calculate any missing CRT params
+    let xp = x.mod(this.p).modPow(this.dmp1, this.p)
+    const xq = x.mod(this.q).modPow(this.dmq1, this.q)
+    while (xp.compareTo(xq) < 0) xp = xp.add(this.p)
+    return xp
+      .subtract(xq)
+      .multiply(this.coeff)
+      .mod(this.p)
+      .multiply(this.q)
+      .add(xq)
+  }
 
-export function RSADoPublic(x) {
-  return x.modPowInt(this.e, this.n)
-}
+  // Return the PKCS#1 RSA decryption of "ctext".
+  // "ctext" is an even-length hex string and the output is a plain string.
+  decrypt(ctext: string): string | null {
+    const c = parseBigInt(ctext, 16)
+    const m = this.doPrivate(c)
+    if (!(m instanceof BigInteger)) return null
+    return pkcs1unpad2(m, (this.n.bitLength() + 7) >> 3)
+  }
 
-// Return the PKCS#1 RSA encryption of "text" as an even-length hex string
+  signString = _rsasign_signString
+  signStringWithSHA1 = _rsasign_signStringWithSHA1
+  signStringWithSHA256 = _rsasign_signStringWithSHA256
+  verifyHexSignatureForMessage = _rsasign_verifyHexSignatureForMessage
+  verifyString = _rsasign_verifyString
 
-export function RSAEncrypt(text) {
-  const m = pkcs1pad2(text, (this.n.bitLength() + 7) >> 3)
-  if (!m) return null
-  const c = this.doPublic(m)
-  if (!c) return null
-  const h = c.toString(16)
-  if ((h.length & 1) === 0) return h
-  else return '0' + h
-}
+  toJSON(): string {
+    return JSON.stringify({
+      coeff: this.coeff.toString(16),
+      d: this.d.toString(16),
+      dmp1: this.dmp1.toString(16),
+      dmq1: this.dmq1.toString(16),
+      e: this.e.toString(16),
+      n: this.n.toString(16),
+      p: this.p.toString(16),
+      q: this.q.toString(16),
+    })
+  }
 
-export function RSAToJSON() {
-  return {
-    coeff: this.coeff.toString(16),
-    d: this.d.toString(16),
-    dmp1: this.dmp1.toString(16),
-    dmq1: this.dmq1.toString(16),
-    e: this.e.toString(16),
-    n: this.n.toString(16),
-    p: this.p.toString(16),
-    q: this.q.toString(16),
+  static parse(key: string | Record<RSAKeyKey, string>): RSAKey | null {
+    const json = (typeof key === 'string' ? JSON.parse(key) : key) as Record<
+      RSAKeyKey,
+      string
+    >
+    if (!json) {
+      return null
+    }
+
+    const rsa = new RSAKey()
+    rsa.setPrivateEx(
+      json.n,
+      json.e,
+      json.d,
+      json.p,
+      json.q,
+      json.dmp1,
+      json.dmq1,
+      json.coeff,
+    )
+
+    return rsa
   }
 }
 
-export function RSAParse(rsaString) {
-  const json = JSON.parse(rsaString)
-  const rsa = new RSAKey()
-
-  rsa.setPrivateEx(
-    json.n,
-    json.e,
-    json.d,
-    json.p,
-    json.q,
-    json.dmp1,
-    json.dmq1,
-    json.coeff,
-  )
-
-  return rsa
-}
-
-// Return the PKCS#1 RSA encryption of "text" as a Base64-encoded string
-//function RSAEncryptB64(text) {
-//  let h = this.encrypt(text);
-//  if(h) return hex2b64(h); else return null;
-//}
-// protected
-RSAKey.prototype.doPublic = RSADoPublic
-
-// public
-RSAKey.prototype.setPublic = RSASetPublic
-RSAKey.prototype.encrypt = RSAEncrypt
-RSAKey.prototype.toJSON = RSAToJSON
-RSAKey.parse = RSAParse
-
 // Version 1.1: support utf-8 decoding in pkcs1unpad2
 // Undo PKCS#1 (type 2, random) padding and, if valid, return the plaintext
-
-export function pkcs1unpad2(d, n) {
+export function pkcs1unpad2(d: BigInteger, n: number): string | null {
   const b = d.toByteArray()
   let i = 0
   while (i < b.length && b[i] === 0) ++i
@@ -176,106 +278,6 @@ export function pkcs1unpad2(d, n) {
   }
   return ret
 }
-
-// Set the private key fields N, e, and d from hex strings
-export function RSASetPrivate(N, E, D) {
-  if (!N && !E && N.length > 0 && E.length > 0) {
-    this.n = parseBigInt(N, 16)
-    this.e = parseInt(E, 16)
-    this.d = parseBigInt(D, 16)
-  } else throw 'Invalid RSA private key'
-}
-
-// Set the private key fields N, e, d and CRT params from hex strings
-export function RSASetPrivateEx(N, E, D, P, Q, DP, DQ, C) {
-  if (!N && !E && N.length > 0 && E.length > 0) {
-    this.n = parseBigInt(N, 16)
-    this.e = parseInt(E, 16)
-    this.d = parseBigInt(D, 16)
-    this.p = parseBigInt(P, 16)
-    this.q = parseBigInt(Q, 16)
-    this.dmp1 = parseBigInt(DP, 16)
-    this.dmq1 = parseBigInt(DQ, 16)
-    this.coeff = parseBigInt(C, 16)
-  } else throw new Error('Invalid RSA private key')
-}
-
-// Generate a new random private key B bits long, using public expt E
-export function RSAGenerate(B, E) {
-  const rng = new SeededRandom()
-  const qs = B >> 1
-  this.e = parseInt(E, 16)
-  const ee = new BigInteger(E, 16)
-  for (;;) {
-    for (;;) {
-      this.p = new BigInteger(B - qs, 1, rng)
-      if (
-        this.p.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) ===
-          0 &&
-        this.p.isProbablePrime(10)
-      )
-        break
-    }
-    for (;;) {
-      this.q = new BigInteger(qs, 1, rng)
-      if (
-        this.q.subtract(BigInteger.ONE).gcd(ee).compareTo(BigInteger.ONE) ===
-          0 &&
-        this.q.isProbablePrime(10)
-      )
-        break
-    }
-    if (this.p.compareTo(this.q) <= 0) {
-      const t = this.p
-      this.p = this.q
-      this.q = t
-    }
-    const p1 = this.p.subtract(BigInteger.ONE)
-    const q1 = this.q.subtract(BigInteger.ONE)
-    const phi = p1.multiply(q1)
-    if (phi.gcd(ee).compareTo(BigInteger.ONE) === 0) {
-      this.n = this.p.multiply(this.q)
-      this.d = ee.modInverse(phi)
-      this.dmp1 = this.d.mod(p1)
-      this.dmq1 = this.d.mod(q1)
-      this.coeff = this.q.modInverse(this.p)
-      break
-    }
-  }
-}
-
-// Perform raw private operation on "x": return x^d (mod n)
-export function RSADoPrivate(x) {
-  if (!this.p || !this.q) return x.modPow(this.d, this.n)
-  // TODO: re-calculate any missing CRT params
-  let xp = x.mod(this.p).modPow(this.dmp1, this.p)
-  const xq = x.mod(this.q).modPow(this.dmq1, this.q)
-  while (xp.compareTo(xq) < 0) xp = xp.add(this.p)
-  return xp
-    .subtract(xq)
-    .multiply(this.coeff)
-    .mod(this.p)
-    .multiply(this.q)
-    .add(xq)
-}
-
-// Return the PKCS#1 RSA decryption of "ctext".
-// "ctext" is an even-length hex string and the output is a plain string.
-export function RSADecrypt(ctext) {
-  const c = parseBigInt(ctext, 16)
-  const m = this.doPrivate(c)
-  if (!(m instanceof BigInteger)) return null
-  return pkcs1unpad2(m, (this.n.bitLength() + 7) >> 3)
-}
-
-// protected
-RSAKey.prototype.doPrivate = RSADoPrivate
-
-// public
-RSAKey.prototype.setPrivate = RSASetPrivate
-RSAKey.prototype.setPrivateEx = RSASetPrivateEx
-RSAKey.prototype.generate = RSAGenerate
-RSAKey.prototype.decrypt = RSADecrypt
 
 //
 // rsa-sign.js - adding signing functions to RSAKey class.
@@ -304,22 +306,29 @@ RSAKey.prototype.decrypt = RSADecrypt
 // 2048 /  512
 // 4096 / 1024
 // As for _RSASGIN_DIHEAD values for each hash algorithm, see PKCS#1 v2.1 spec (p38).
-const _RSASIGN_DIHEAD = []
-_RSASIGN_DIHEAD['sha1'] = '3021300906052b0e03021a05000414'
-_RSASIGN_DIHEAD['sha256'] = '3031300d060960864801650304020105000420'
-//_RSASIGN_DIHEAD['md2'] = "3020300c06082a864886f70d020205000410";
-//_RSASIGN_DIHEAD['md5'] = "3020300c06082a864886f70d020505000410";
-//_RSASIGN_DIHEAD['sha384'] = "3041300d060960864801650304020205000430";
-//_RSASIGN_DIHEAD['sha512'] = "3051300d060960864801650304020305000440";
-const _RSASIGN_HASHHEXFUNC = []
-_RSASIGN_HASHHEXFUNC['sha1'] = sha1.hex
-_RSASIGN_HASHHEXFUNC['sha256'] = sha256.hex
+const _RSASIGN_DIHEAD = <const>{
+  sha1: '3021300906052b0e03021a05000414',
+  sha256: '3031300d060960864801650304020105000420',
+  // md2: '3020300c06082a864886f70d020205000410',
+  // md5: '3020300c06082a864886f70d020505000410',
+  // sha384: '3041300d060960864801650304020205000430',
+  // sha512: '3051300d060960864801650304020305000440',
+}
+const _RSASIGN_HASHHEXFUNC = <const>{
+  sha1: sha1.hex,
+  sha256: sha256.hex,
+}
+type HashAlg = keyof typeof _RSASIGN_HASHHEXFUNC
 
 // ========================================================================
 // Signature Generation
 // ========================================================================
 
-function _rsasign_getHexPaddedDigestInfoForString(s, keySize, hashAlg) {
+function _rsasign_getHexPaddedDigestInfoForString(
+  s: string,
+  keySize: number,
+  hashAlg: HashAlg,
+): string {
   const pmStrLen = keySize / 4
   const hashFunc = _RSASIGN_HASHHEXFUNC[hashAlg]
   const sHashHex = hashFunc(s)
@@ -335,7 +344,11 @@ function _rsasign_getHexPaddedDigestInfoForString(s, keySize, hashAlg) {
   return sPaddedMessageHex
 }
 
-function _rsasign_signString(s, hashAlg) {
+function _rsasign_signString(
+  this: RSAKey,
+  s: string,
+  hashAlg: HashAlg,
+): string {
   const hPM = _rsasign_getHexPaddedDigestInfoForString(
     s,
     this.n.bitLength(),
@@ -347,7 +360,7 @@ function _rsasign_signString(s, hashAlg) {
   return hexSign
 }
 
-function _rsasign_signStringWithSHA1(s) {
+function _rsasign_signStringWithSHA1(this: RSAKey, s: string): string {
   const hPM = _rsasign_getHexPaddedDigestInfoForString(
     s,
     this.n.bitLength(),
@@ -359,7 +372,7 @@ function _rsasign_signStringWithSHA1(s) {
   return hexSign
 }
 
-function _rsasign_signStringWithSHA256(s) {
+function _rsasign_signStringWithSHA256(this: RSAKey, s: string): string {
   const hPM = _rsasign_getHexPaddedDigestInfoForString(
     s,
     this.n.bitLength(),
@@ -375,31 +388,46 @@ function _rsasign_signStringWithSHA256(s) {
 // Signature Verification
 // ========================================================================
 
-function _rsasign_getDecryptSignatureBI(biSig, hN, hE) {
+function _rsasign_getDecryptSignatureBI(
+  biSig: BigInteger,
+  hN: string,
+  hE: string,
+): BigInteger {
   const rsa = new RSAKey()
   rsa.setPublic(hN, hE)
   const biDecryptedSig = rsa.doPublic(biSig)
   return biDecryptedSig
 }
 
-function _rsasign_getHexDigestInfoFromSig(biSig, hN, hE) {
+function _rsasign_getHexDigestInfoFromSig(
+  biSig: BigInteger,
+  hN: string,
+  hE: string,
+): string {
   const biDecryptedSig = _rsasign_getDecryptSignatureBI(biSig, hN, hE)
   const hDigestInfo = biDecryptedSig.toString(16).replace(/^1f+00/, '')
   return hDigestInfo
 }
 
-function _rsasign_getAlgNameAndHashFromHexDisgestInfo(hDigestInfo) {
+function _rsasign_getAlgNameAndHashFromHexDisgestInfo(
+  hDigestInfo: string,
+): [HashAlg, string] | [] {
   for (const algName in _RSASIGN_DIHEAD) {
-    const head = _RSASIGN_DIHEAD[algName]
+    const head = _RSASIGN_DIHEAD[algName as HashAlg]
     const len = head.length
     if (hDigestInfo.substring(0, len) === head) {
-      return [algName, hDigestInfo.substring(len)]
+      return [algName as HashAlg, hDigestInfo.substring(len)]
     }
   }
   return []
 }
 
-function _rsasign_verifySignatureWithArgs(sMsg, biSig, hN, hE) {
+function _rsasign_verifySignatureWithArgs(
+  sMsg: string,
+  biSig: BigInteger,
+  hN: string,
+  hE: string,
+): boolean {
   const hDigestInfo = _rsasign_getHexDigestInfoFromSig(biSig, hN, hE)
   const digestInfoAry =
     _rsasign_getAlgNameAndHashFromHexDisgestInfo(hDigestInfo)
@@ -411,7 +439,11 @@ function _rsasign_verifySignatureWithArgs(sMsg, biSig, hN, hE) {
   return diHashValue === msgHashValue
 }
 
-function _rsasign_verifyHexSignatureForMessage(hSig, sMsg) {
+function _rsasign_verifyHexSignatureForMessage(
+  this: RSAKey,
+  sMsg: string,
+  hSig: string,
+): boolean {
   const biSig = parseBigInt(hSig, 16)
   const result = _rsasign_verifySignatureWithArgs(
     sMsg,
@@ -422,7 +454,11 @@ function _rsasign_verifyHexSignatureForMessage(hSig, sMsg) {
   return result
 }
 
-function _rsasign_verifyString(sMsg, hSig) {
+function _rsasign_verifyString(
+  this: RSAKey,
+  sMsg: string,
+  hSig: string,
+): boolean {
   hSig = hSig.replace(/[ \n]+/g, '')
   const biSig = parseBigInt(hSig, 16)
   const biDecryptedSig = this.doPublic(biSig)
@@ -436,47 +472,4 @@ function _rsasign_verifyString(sMsg, hSig) {
   const ff = _RSASIGN_HASHHEXFUNC[algName]
   const msgHashValue = ff(sMsg)
   return diHashValue === msgHashValue
-}
-
-RSAKey.prototype.signString = _rsasign_signString
-RSAKey.prototype.signStringWithSHA1 = _rsasign_signStringWithSHA1
-RSAKey.prototype.signStringWithSHA256 = _rsasign_signStringWithSHA256
-
-RSAKey.prototype.verifyString = _rsasign_verifyString
-RSAKey.prototype.verifyHexSignatureForMessage =
-  _rsasign_verifyHexSignatureForMessage
-
-// instance serializer, JSON.stringify(object_with_RSAKey) will serialize as expected.
-RSAKey.prototype.toJSON = function () {
-  return JSON.stringify({
-    type: 'RSAKey',
-    coeff: this.coeff.toString(16),
-    d: this.d.toString(16),
-    dmp1: this.dmp1.toString(16),
-    dmq1: this.dmq1.toString(16),
-    e: this.e.toString(16),
-    n: this.n.toString(16),
-    p: this.p.toString(16),
-    q: this.q.toString(16),
-  })
-}
-
-// global deserializer method
-RSAKey.fromJSON = function (key) {
-  const json = typeof key === 'string' ? JSON.parse(key) : key
-  if (!(json && json.type === 'RSAKey')) {
-    return null
-  }
-  const rsa = new RSAKey()
-  rsa.setPrivateEx(
-    json.n,
-    json.e,
-    json.d,
-    json.p,
-    json.q,
-    json.dmp1,
-    json.dmq1,
-    json.coeff,
-  )
-  return rsa
 }

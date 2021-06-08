@@ -1,8 +1,9 @@
-import aes from './aes'
+import aes, { AESKey } from './aes'
 import { int2char } from './jsbn'
 import { math, SecureRandom } from './random'
 import { MD5, sha256 } from './hash'
 import { RSAKey } from './rsa'
+import { ByteArray } from './type'
 
 const base64Chars =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -10,9 +11,22 @@ const magic = '::52cee64bb3a38f6403386519a39ac91c::'
 
 aes.Init()
 
-export default {
-  b256to64(t) {
-    let a, c, n
+type DecryptStatusSuccessForSignature<Signature> = {
+  status: 'success'
+  plaintext: string
+  signature: Signature
+  publicKeyString: Signature extends 'unsigned' ? never : string
+}
+type DecryptStatusSuccess =
+  | DecryptStatusSuccessForSignature<'unsigned'>
+  | DecryptStatusSuccessForSignature<'verified' | 'forged'>
+type DecryptStatusFailure = { status: 'Invalid public key' | 'failure' }
+
+export class cryptico {
+  static b256to64(t: string): string {
+    let a = 0, // Should be reassigned before read
+      c,
+      n
     let r = '',
       // l = 0,
       s = 0
@@ -44,9 +58,9 @@ export default {
       r += '='
     }
     return r
-  },
+  }
 
-  b64to256(t) {
+  static b64to256(t: string): string {
     let c, n
     let r = '',
       s = 0,
@@ -61,9 +75,9 @@ export default {
       }
     }
     return r
-  },
+  }
 
-  b16to64(h) {
+  static b16to64(h: string): string {
     let i
     let c
     let ret = ''
@@ -83,13 +97,13 @@ export default {
     }
     while ((ret.length & 3) > 0) ret += '='
     return ret
-  },
+  }
 
-  b64to16(s) {
+  static b64to16(s: string): string {
     let ret = ''
     let i
     let k = 0
-    let slop
+    let slop = 0 // Should be reassigned before read
     for (i = 0; i < s.length; ++i) {
       if (s.charAt(i) === '=') break
       const v = base64Chars.indexOf(s.charAt(i))
@@ -115,87 +129,87 @@ export default {
     }
     if (k === 1) ret += int2char(slop << 2)
     return ret
-  },
+  }
 
   // Converts a string to a byte array.
-  string2bytes(str) {
+  static string2bytes(str: string): ByteArray {
     const bytes = []
     for (let i = 0; i < str.length; i++) {
       bytes.push(str.charCodeAt(i))
     }
     return bytes
-  },
+  }
 
   // Converts a byte array to a string.
-  bytes2string(bytes) {
+  static bytes2string(bytes: ByteArray): string {
     let str = ''
     for (let i = 0; i < bytes.length; i++) {
       str += String.fromCharCode(bytes[i])
     }
     return str
-  },
+  }
 
   // Converts a UTF-8 string to ASCII string.
-  utf82string(string) {
-    return unescape(encodeURIComponent(string))
-  },
+  static utf82string(str: string): string {
+    return unescape(encodeURIComponent(str))
+  }
 
   // Converts ascii string to a UTF-8 string.
-  string2utf8(uriencoded) {
+  static string2utf8(uriencoded: string): string {
     return decodeURIComponent(escape(uriencoded))
-  },
+  }
 
   // Converts a UTF-8 string to a byte array.
-  utf82bytes(string) {
-    const uriencoded = unescape(encodeURIComponent(string))
+  static utf82bytes(str: string): ByteArray {
+    const uriencoded = unescape(encodeURIComponent(str))
     return this.string2bytes(uriencoded)
-  },
+  }
 
   // Converts a byte array to a UTF-8 string.
-  bytes2utf8(bytes) {
+  static bytes2utf8(bytes: ByteArray): string {
     const uriencoded = this.bytes2string(bytes)
     return decodeURIComponent(escape(uriencoded))
-  },
+  }
 
   // Returns a XOR b, where a and b are 16-byte byte arrays.
-  blockXOR(a, b) {
-    const xor = new Array(16)
+  static blockXOR(a: ByteArray, b: ByteArray): ByteArray {
+    const xor = new Array(16) as ByteArray
     for (let i = 0; i < 16; i++) {
       xor[i] = a[i] ^ b[i]
     }
     return xor
-  },
+  }
 
   // Returns a 16-byte initialization vector.
-  blockIV() {
+  static blockIV(): ByteArray {
     const r = new SecureRandom()
-    const IV = new Array(16)
+    const IV = new Array(16) as ByteArray
     r.nextBytes(IV)
     return IV
-  },
+  }
 
   // Returns a copy of bytes with zeros appended to the end
   // so that the (length of bytes) % 16 === 0.
-  pad16(bytes) {
+  static pad16(bytes: ByteArray): ByteArray {
     const newBytes = bytes.slice(0)
     const padding = (16 - (bytes.length % 16)) % 16
     for (let i = bytes.length; i < bytes.length + padding; i++) {
       newBytes.push(0)
     }
     return newBytes
-  },
+  }
 
   // Removes trailing zeros from a byte array.
-  depad(bytes) {
+  static depad(bytes: ByteArray): ByteArray {
     let newBytes = bytes.slice(0)
     while (newBytes[newBytes.length - 1] === 0) {
       newBytes = newBytes.slice(0, newBytes.length - 1)
     }
     return newBytes
-  },
+  }
 
   // AES CBC Encryption.
-  encryptAESCBC(plaintext, key) {
+  static encryptAESCBC(plaintext: string, key: AESKey): string {
     const exkey = key.slice(0)
     aes.ExpandKey(exkey)
     let blocks = this.utf82bytes(plaintext)
@@ -210,15 +224,15 @@ export default {
     }
     const ciphertext = this.bytes2string(encryptedBlocks)
     return this.b256to64(ciphertext)
-  },
+  }
 
   // AES CBC Decryption.
-  decryptAESCBC(encryptedText, key) {
+  static decryptAESCBC(encryptedText: string, key: AESKey): string {
     const exkey = key.slice(0)
     aes.ExpandKey(exkey)
     const asciiText = this.b64to256(encryptedText)
     const encryptedBlocks = this.string2bytes(asciiText)
-    let decryptedBlocks = []
+    let decryptedBlocks: ByteArray = []
     for (let i = 1; i < encryptedBlocks.length / 16; i++) {
       let tempBlock = encryptedBlocks.slice(i * 16, i * 16 + 16)
       const prevBlock = encryptedBlocks.slice((i - 1) * 16, (i - 1) * 16 + 16)
@@ -228,53 +242,57 @@ export default {
     }
     decryptedBlocks = this.depad(decryptedBlocks)
     return this.bytes2utf8(decryptedBlocks)
-  },
+  }
 
   // Wraps a str to 60 characters.
-  wrap60(str) {
+  static wrap60(str: string): string {
     let outstr = ''
     for (let i = 0; i < str.length; i++) {
       if (i % 60 === 0 && i !== 0) outstr += '\n'
       outstr += str[i]
     }
     return outstr
-  },
+  }
 
   // Generate a random key for the AES-encrypted message. ciphertext.split
-  generateAESKey() {
-    const key = new Array(32)
+  static generateAESKey(): AESKey {
+    const key = new Array(32) as ByteArray
     const r = new SecureRandom()
     r.nextBytes(key)
     return key
-  },
+  }
 
   // Generates an RSA key from a passphrase.
-  generateRSAKey(passphrase, bitlength) {
+  static generateRSAKey(passphrase: string, bitlength: number): RSAKey {
     math.seedrandom(sha256.hex(passphrase))
     const rsa = new RSAKey()
     rsa.generate(bitlength, '03')
     return rsa
-  },
+  }
 
   // Returns the ascii-armored version of the public key.
-  publicKeyString(rsakey) {
+  static publicKeyString(rsakey: RSAKey): string {
     return this.b16to64(rsakey.n.toString(16))
-  },
+  }
 
   // Returns an MD5 sum of a publicKeyString for easier identification.
-  publicKeyID(publicKeyString) {
+  static publicKeyID(publicKeyString: string): string {
     return MD5(publicKeyString)
-  },
+  }
 
-  publicKeyFromString(string) {
-    const N = this.b64to16(string.split('|')[0])
+  static publicKeyFromString(str: string): RSAKey {
+    const N = this.b64to16(str.split('|')[0])
     const E = '03'
     const rsa = new RSAKey()
     rsa.setPublic(N, E)
     return rsa
-  },
+  }
 
-  encrypt(plaintext, publickeystring, signingkey) {
+  static encrypt(
+    plaintext: string,
+    publickeystring: string,
+    signingkey: RSAKey,
+  ): { status: string } | { status: 'success'; cipher: string } {
     {
       let cipherblock = ''
       const aeskey = this.generateAESKey()
@@ -295,16 +313,21 @@ export default {
       cipherblock += this.encryptAESCBC(plaintext, aeskey)
       return { status: 'success', cipher: cipherblock }
     }
-  },
+  }
 
-  decrypt(ciphertext, key) {
+  static decrypt(
+    ciphertext: string,
+    key: RSAKey,
+  ): DecryptStatusSuccess | DecryptStatusFailure {
     const cipherblock = ciphertext.split('?')
-    let aeskey = key.decrypt(this.b64to16(cipherblock[0]))
+    const aeskey = key.decrypt(this.b64to16(cipherblock[0]))
     if (aeskey == null) {
       return { status: 'failure' }
     }
-    aeskey = this.string2bytes(aeskey)
-    const plaintext = this.decryptAESCBC(cipherblock[1], aeskey).split(magic)
+    const aeskeyBytes = this.string2bytes(aeskey)
+    const plaintext = this.decryptAESCBC(cipherblock[1], aeskeyBytes).split(
+      magic,
+    )
     if (plaintext.length > 1) {
       return this._confirm(plaintext)
     } else
@@ -312,19 +335,21 @@ export default {
         status: 'success',
         plaintext: plaintext[0],
         signature: 'unsigned',
-      }
-  },
+      } as DecryptStatusSuccessForSignature<'unsigned'>
+  }
 
-  sign(plaintext, signingkey) {
+  static sign(plaintext: string, signingkey: RSAKey): string {
     return this.b16to64(signingkey.signString(plaintext, 'sha256'))
-  },
+  }
 
-  verify(plaintext) {
+  static verify(plaintext: string[]): boolean {
     const result = this._confirm(plaintext)
     return result.status === 'success' && result.signature === 'verified'
-  },
+  }
 
-  _confirm(plaintext) {
+  private static _confirm(
+    plaintext: string[],
+  ): DecryptStatusSuccess | DecryptStatusFailure {
     if (plaintext.length === 3) {
       const publickey = this.publicKeyFromString(plaintext[1])
       const signature = this.b64to16(plaintext[2])
@@ -348,5 +373,5 @@ export default {
         status: 'failure',
       }
     }
-  },
+  }
 }

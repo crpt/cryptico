@@ -19,7 +19,11 @@
 
 // later modifications by wwwtyro@github
 
-const aes = {
+import { ByteArray } from './type'
+
+export type AESKey = ByteArray
+
+const aes = <const>{
   // eslint-disable-next-line prettier/prettier
   Sbox: [
     99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171, 118,
@@ -38,31 +42,37 @@ const aes = {
     246, 14, 97, 53, 87, 185, 134, 193, 29, 158, 225, 248, 152, 17, 105, 217,
     142, 148, 155, 30, 135, 233, 206, 85, 40, 223, 140, 161, 137, 13, 191, 230,
     66, 104, 65, 153, 45, 15, 176, 84, 187, 22,
-  ],
+  ] as ByteArray,
 
-  ShiftRowTab: [0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11],
+  ShiftRowTab: [
+    0, 5, 10, 15, 4, 9, 14, 3, 8, 13, 2, 7, 12, 1, 6, 11,
+  ] as ByteArray,
+
+  Sbox_Inv: new Array<number>(256),
+  ShiftRowTab_Inv: new Array<number>(16),
+  xtime: new Array<number>(256),
 
   Init() {
-    aes.Sbox_Inv = new Array(256)
-    for (let i = 0; i < 256; i++) aes.Sbox_Inv[aes.Sbox[i]] = i
+    for (let i = 0; i < 256; i++) this.Sbox_Inv[this.Sbox[i]] = i
 
-    aes.ShiftRowTab_Inv = new Array(16)
-    for (let i = 0; i < 16; i++) aes.ShiftRowTab_Inv[aes.ShiftRowTab[i]] = i
+    for (let i = 0; i < 16; i++) this.ShiftRowTab_Inv[this.ShiftRowTab[i]] = i
 
-    aes.xtime = new Array(256)
     for (let i = 0; i < 128; i++) {
-      aes.xtime[i] = i << 1
-      aes.xtime[128 + i] = (i << 1) ^ 0x1b
+      this.xtime[i] = i << 1
+      this.xtime[128 + i] = (i << 1) ^ 0x1b
     }
   },
 
   Done() {
-    delete aes.Sbox_Inv
-    delete aes.ShiftRowTab_Inv
-    delete aes.xtime
+    this.Sbox_Inv.length = 0
+    this.Sbox_Inv.length = 256
+    this.ShiftRowTab_Inv.length = 0
+    this.ShiftRowTab_Inv.length = 16
+    this.xtime.length = 0
+    this.xtime.length = 256
   },
 
-  ExpandKey(key) {
+  ExpandKey(key: AESKey) {
     const kl = key.length
     let ks,
       Rcon = 1
@@ -100,7 +110,7 @@ const aes = {
     }
   },
 
-  Encrypt(block, key) {
+  Encrypt(block: ByteArray, key: AESKey) {
     const l = key.length
     aes.AddRoundKey(block, key.slice(0, 16))
     let i
@@ -115,7 +125,7 @@ const aes = {
     aes.AddRoundKey(block, key.slice(i, l))
   },
 
-  Decrypt(block, key) {
+  Decrypt(block: ByteArray, key: AESKey) {
     const l = key.length
     aes.AddRoundKey(block, key.slice(l - 16, l))
     aes.ShiftRows(block, aes.ShiftRowTab_Inv)
@@ -129,20 +139,20 @@ const aes = {
     aes.AddRoundKey(block, key.slice(0, 16))
   },
 
-  SubBytes(state, sbox) {
+  SubBytes(state: ByteArray, sbox: ByteArray) {
     for (let i = 0; i < 16; i++) state[i] = sbox[state[i]]
   },
 
-  AddRoundKey(state, rkey) {
+  AddRoundKey(state: ByteArray, rkey: ByteArray) {
     for (let i = 0; i < 16; i++) state[i] ^= rkey[i]
   },
 
-  ShiftRows(state, shifttab) {
-    const h = [].concat(state)
+  ShiftRows(state: ByteArray, shifttab: number[]) {
+    const h = new Array<number>().concat(state)
     for (let i = 0; i < 16; i++) state[i] = h[shifttab[i]]
   },
 
-  MixColumns(state) {
+  MixColumns(state: ByteArray) {
     for (let i = 0; i < 16; i += 4) {
       const s0 = state[i + 0],
         s1 = state[i + 1]
@@ -156,7 +166,7 @@ const aes = {
     }
   },
 
-  MixColumns_Inv(state) {
+  MixColumns_Inv(state: ByteArray) {
     for (let i = 0; i < 16; i += 4) {
       const s0 = state[i + 0],
         s1 = state[i + 1]

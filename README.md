@@ -1,10 +1,24 @@
 # cryptico
 
-> Forked from [cryptico](https://github.com/tracker1/cryptico-js), ported to TypeScript.
+> Forked from [cryptico](https://github.com/tracker1/cryptico-js), ported to ES modules and TypeScript.
 
 ## Install
 
 `npm install @crpt/cryptico`
+
+```typescript
+import { cryptico, RSAKey } from '@crpt/cryptico'
+const key: RSAKey = cryptico.generateRSAKey('Made with love by DAOT Labs', 512)
+```
+
+To use with plain HTML and JavaScript, include [dist/cryptico.umd.js]() (example from [test/test.html]()):
+```HTML
+<script language="JavaScript" type="text/javascript" src="../dist/cryptico.umd.js"></script>
+<script lang="js">
+  const api = cryptico.cryptico
+  const key = api.generateAESKey('Made with love by DAOT Labs', 512)
+</script>
+```
 
 ## Overview
 

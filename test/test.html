@@ -7,6 +7,8 @@
       src="../dist/cryptico.umd.js"
     ></script>
     <script>
+      const api = cryptico.cryptico
+
       function print(string) {
         document.write(string + '\n\n')
       }
@@ -19,8 +21,8 @@
       print("Matt's passphrase: " + PassPhrase)
       print('Bit length: ' + Bits)
 
-      const MattsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits)
-      const MattsPublicKeyString = cryptico.publicKeyString(MattsRSAkey)
+      const MattsRSAkey = api.generateRSAKey(PassPhrase, Bits)
+      const MattsPublicKeyString = api.publicKeyString(MattsRSAkey)
 
       print("Matt's public key string:")
       print(MattsPublicKeyString)
@@ -30,12 +32,12 @@
 
       print("Sam's message: " + PlainText)
 
-      let EncryptionResult = cryptico.encrypt(PlainText, MattsPublicKeyString)
+      let EncryptionResult = api.encrypt(PlainText, MattsPublicKeyString)
 
       print('The encrypted message:')
       print(EncryptionResult.cipher)
 
-      let DecryptionResult = cryptico.decrypt(
+      let DecryptionResult = api.decrypt(
         EncryptionResult.cipher,
         MattsRSAkey,
       )
@@ -49,8 +51,8 @@
 
       PassPhrase = "There Ain't No Such Thing As A Free Lunch."
       Bits = 512
-      const SamsRSAkey = cryptico.generateRSAKey(PassPhrase, Bits)
-      EncryptionResult = cryptico.encrypt(
+      const SamsRSAkey = api.generateRSAKey(PassPhrase, Bits)
+      EncryptionResult = api.encrypt(
         PlainText,
         MattsPublicKeyString,
         SamsRSAkey,
@@ -58,13 +60,13 @@
 
       print(
         "Sam's public key ID: " +
-          cryptico.publicKeyID(cryptico.publicKeyString(SamsRSAkey)),
+          api.publicKeyID(api.publicKeyString(SamsRSAkey)),
       )
 
       print('The encrypted message:')
       print(EncryptionResult.cipher)
 
-      DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey)
+      DecryptionResult = api.decrypt(EncryptionResult.cipher, MattsRSAkey)
 
       print('The decrypted message:')
       print(DecryptionResult.plaintext)
@@ -75,20 +77,20 @@
       print(DecryptionResult.publicKeyString)
 
       print('The signature public key ID:')
-      print(cryptico.publicKeyID(DecryptionResult.publicKeyString))
+      print(api.publicKeyID(DecryptionResult.publicKeyString))
 
 
       print('<h1>Signed, forged signature:</h1>')
 
       const ForgersPassPhrase = 'There Is Such Thing As A Free Lunch.'
-      const ForgersRSAkey = cryptico.generateRSAKey(ForgersPassPhrase, Bits)
+      const ForgersRSAkey = api.generateRSAKey(ForgersPassPhrase, Bits)
 
       print(
         "Forger's public key ID: " +
-          cryptico.publicKeyID(cryptico.publicKeyString(ForgersRSAkey)),
+          api.publicKeyID(api.publicKeyString(ForgersRSAkey)),
       )
 
-      // const ForgedEncryptionResult = cryptico.encrypt(
+      // const ForgedEncryptionResult = api.encrypt(
       //   PlainText,
       //   MattsPublicKeyString,
       //   ForgersRSAkey,
@@ -99,7 +101,7 @@
       print('The encrypted message:')
       print(EncryptionResult.cipher)
 
-      DecryptionResult = cryptico.decrypt(EncryptionResult.cipher, MattsRSAkey)
+      DecryptionResult = api.decrypt(EncryptionResult.cipher, MattsRSAkey)
 
       print('The decrypted message:')
       print(DecryptionResult.plaintext)
@@ -110,7 +112,7 @@
       print(DecryptionResult.publicKeyString)
 
       print('The signature public key ID:')
-      print(cryptico.publicKeyID(DecryptionResult.publicKeyString))
+      print(api.publicKeyID(DecryptionResult.publicKeyString))
     </script>
   </head>
   <body style="font-family: monospace; white-space: pre"></body>

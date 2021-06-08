@@ -5,7 +5,7 @@ const config: UserConfig = {
   build: {
     lib: {
       name: 'cryptico',
-      entry: path.resolve(__dirname, 'src/api.ts'),
+      entry: path.resolve(__dirname, 'src/index.ts'),
     },
     sourcemap: true,
   },

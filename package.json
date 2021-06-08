@@ -2,13 +2,19 @@
   "name": "@crpt/cryptico",
   "version": "2.0.0-alpha0",
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico)",
-  "main": "./lib/cryptico.ts",
+  "main": "./lib/index.ts",
+  "files": [
+    "./lib"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -p tsconfig.lib.json",
+    "build:type": "tsc -p tsconfig.lib.json --emitDeclarationOnly",
+    "build:browser": "vite build",
     "serve": "vite preview",
     "lint": "eslint '{src,test}/**/*.ts'",
-    "lint:fix": "eslint '{src,test}/**/*.ts' --fix"
+    "lint:fix": "eslint '{src,test}/**/*.ts' --fix",
+    "prepare": "npm run lint && npm run build"
   },
   "prettier": "@daotl/prettier-config",
   "repository": {
