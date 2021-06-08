@@ -1,4 +1,4 @@
-import aes, { AESKey } from './aes'
+import { aes, AESKey } from './aes'
 import { int2char } from './jsbn'
 import { math, SecureRandom } from './random'
 import { MD5, sha256 } from './hash'

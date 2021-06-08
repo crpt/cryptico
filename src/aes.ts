@@ -23,7 +23,7 @@ import { ByteArray } from './type'
 
 export type AESKey = ByteArray
 
-const aes = <const>{
+export const aes = <const>{
   // eslint-disable-next-line prettier/prettier
   Sbox: [
     99, 124, 119, 123, 242, 107, 111, 197, 48, 1, 103, 43, 254, 215, 171, 118,
@@ -183,5 +183,3 @@ const aes = <const>{
     }
   },
 }
-
-export default aes
