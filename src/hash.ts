@@ -12,7 +12,7 @@ export type HashFunc = (s: string) => string
  *  Original code by Angel Marin, Paul Johnston.
  *
  **/
-function SHA256(s: string): string {
+function SHA256(msg: string): string {
   const chrsz = 8
   const hexcase = 0
 
@@ -141,12 +141,12 @@ function SHA256(s: string): string {
     return str
   }
 
-  s = Utf8Encode(s)
-  return binb2hex(core_sha256(str2binb(s), s.length * chrsz))
+  msg = Utf8Encode(msg)
+  return binb2hex(core_sha256(str2binb(msg), msg.length * chrsz))
 }
 
 export const sha256 = {
-  hex: <HashFunc>((s: string) => SHA256(s)),
+  hex: <HashFunc>((msg: string) => SHA256(msg)),
 }
 
 /**
@@ -312,7 +312,7 @@ function SHA1(msg: string): string {
 }
 
 export const sha1 = {
-  hex: <HashFunc>((s: string) => SHA1(s)),
+  hex: <HashFunc>SHA1,
 }
 
 /**
@@ -321,7 +321,7 @@ export const sha1 = {
  *  http://www.webtoolkit.info/
  *
  **/
-export function MD5(str: string): string {
+export function MD5(msg: string): string {
   function RotateLeft(lValue: number, iShiftBits: number): number {
     return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits))
   }
@@ -469,9 +469,9 @@ export function MD5(str: string): string {
     S43 = 15,
     S44 = 21
 
-  str = Utf8Encode(str)
+  msg = Utf8Encode(msg)
 
-  const x = ConvertToWordArray(str)
+  const x = ConvertToWordArray(msg)
 
   a = 0x67452301
   b = 0xefcdab89
