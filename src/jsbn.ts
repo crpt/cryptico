@@ -140,8 +140,8 @@ export class BigInteger {
     while (this.t > 0 && this[this.t - 1] === c) --this.t
   }
 
-  // return string representation in given radix
-  toString(b: number): string {
+  // return string representation in given radix (default to 16)
+  toString(b: number = 16): string {
     if (this.s < 0) return '-' + this.negate().toString(b)
     let k
     if (b === 16) k = 4
