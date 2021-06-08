@@ -1,5 +1,5 @@
 {
-  "name": "@crpt/cryptico",
+  "name": "@daotl/cryptico",
   "version": "2.0.0-alpha0",
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico)",
   "main": "./lib/index.ts",

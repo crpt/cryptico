@@ -4,10 +4,10 @@
 
 ## Install
 
-`npm install @crpt/cryptico`
+`npm install @daotl/cryptico`
 
 ```typescript
-import { cryptico, RSAKey } from '@crpt/cryptico'
+import { cryptico, RSAKey } from '@daotl/cryptico'
 const key: RSAKey = cryptico.generateRSAKey('Made with love by DAOT Labs', 512)
 ```
 
