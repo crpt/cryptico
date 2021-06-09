@@ -1,4 +1,5 @@
-lib/
+dist/*
+!dist/cryptico.iife.js*
 
 # Logs
 logs

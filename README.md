@@ -11,9 +11,9 @@ import { cryptico, RSAKey } from '@daotl/cryptico'
 const key: RSAKey = cryptico.generateRSAKey('Made with love by DAOT Labs', 512)
 ```
 
-To use with plain HTML and JavaScript, include [dist/cryptico.umd.js]() (example from [test/test.html]()):
+To use with plain HTML and JavaScript, include [dist/cryptico.iife.js]() (example from [test/test.html]()):
 ```HTML
-<script language="JavaScript" type="text/javascript" src="../dist/cryptico.umd.js"></script>
+<script language="JavaScript" type="text/javascript" src="../dist/cryptico.iife.js"></script>
 <script lang="js">
   const api = cryptico.cryptico
   const key = api.generateAESKey('Made with love by DAOT Labs', 512)

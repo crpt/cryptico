@@ -3,7 +3,8 @@
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,
-    "outDir": "lib"
+    "declarationDir": "dist/types",
+    "outDir": "dist"
   },
-  "exclude": ["vite.config.ts"]
+  "exclude": ["rollup.config.ts"]
 }
