@@ -22,7 +22,7 @@
     "url": "https://github.com/crpt/cryptico.git"
   },
   "author": "Nex Zhu <hitnexup@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "contributors": [
     {
       "name": "Michael J. Ryan",
