@@ -1,7 +1,7 @@
 import { aes, AESKey } from './aes'
 import { int2char } from './jsbn'
 import { math, SecureRandom } from './random'
-import { MD5, sha256 } from './hash'
+import { md5, sha256 } from './hash'
 import { RSAKey } from './rsa'
 import { ByteArray } from './type'
 
@@ -264,7 +264,7 @@ export class cryptico {
 
   // Generates an RSA key from a passphrase.
   static generateRSAKey(passphrase: string, bitlength: number): RSAKey {
-    math.seedrandom(sha256.hex(passphrase))
+    math.seedrandom(sha256(passphrase))
     const rsa = new RSAKey()
     rsa.generate(bitlength, '03')
     return rsa
@@ -277,7 +277,7 @@ export class cryptico {
 
   // Returns an MD5 sum of a publicKeyString for easier identification.
   static publicKeyID(publicKeyString: string): string {
-    return MD5(publicKeyString)
+    return md5(publicKeyString)
   }
 
   static publicKeyFromString(str: string): RSAKey {

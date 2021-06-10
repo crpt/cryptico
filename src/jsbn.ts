@@ -141,7 +141,7 @@ export class BigInteger {
   }
 
   // return string representation in given radix (default to 16)
-  toString(b: number = 16): string {
+  toString(b = 16): string {
     if (this.s < 0) return '-' + this.negate().toString(b)
     let k
     if (b === 16) k = 4

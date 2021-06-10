@@ -11,6 +11,8 @@ import { cryptico, RSAKey } from '@daotl/cryptico'
 const key: RSAKey = cryptico.generateRSAKey('Made with love by DAOT Labs', 512)
 ```
 
+If using in Node.js, you can instead use the [@daotl/cryptico-node](https://www.npmjs.com/package/@daotl/cryptico-node) package (same API) for better performance, which use Node.js standard library `crypto` for hashing instead of native JavaScript implementation.
+
 To use with plain HTML and JavaScript, include [dist/cryptico.iife.js]() (example from [test/test.html]()):
 ```HTML
 <script language="JavaScript" type="text/javascript" src="../dist/cryptico.iife.js"></script>

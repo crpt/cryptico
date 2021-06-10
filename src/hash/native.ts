@@ -1,8 +1,6 @@
 // From: https://github.com/tracker1/cryptico-js/blob/57b32417967b9c9b75c47c04971f72a120b59a67/src/hash.js
 
-import { ByteArray } from './type'
-
-export type HashFunc = (s: string) => string
+import { ByteArray } from '../type'
 
 /**
  *
@@ -12,7 +10,7 @@ export type HashFunc = (s: string) => string
  *  Original code by Angel Marin, Paul Johnston.
  *
  **/
-function SHA256(msg: string): string {
+export function sha256(msg: string): string {
   const chrsz = 8
   const hexcase = 0
 
@@ -145,17 +143,13 @@ function SHA256(msg: string): string {
   return binb2hex(core_sha256(str2binb(msg), msg.length * chrsz))
 }
 
-export const sha256 = {
-  hex: <HashFunc>((msg: string) => SHA256(msg)),
-}
-
 /**
  *
  *  Secure Hash Algorithm (SHA1)
  *  http://www.webtoolkit.info/
  *
  **/
-function SHA1(msg: string): string {
+export function sha1(msg: string): string {
   function rotate_left(n: number, s: number): number {
     const t4 = (n << s) | (n >>> (32 - s))
     return t4
@@ -311,17 +305,13 @@ function SHA1(msg: string): string {
   return ret.toLowerCase()
 }
 
-export const sha1 = {
-  hex: <HashFunc>SHA1,
-}
-
 /**
  *
  *  MD5 (Message-Digest Algorithm)
  *  http://www.webtoolkit.info/
  *
  **/
-export function MD5(msg: string): string {
+export function md5(msg: string): string {
   function RotateLeft(lValue: number, iShiftBits: number): number {
     return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits))
   }

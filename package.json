@@ -1,21 +1,21 @@
 {
   "name": "@daotl/cryptico",
-  "version": "2.0.0-alpha2",
+  "version": "2.0.0-alpha5",
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico)",
-  "main": "dist/cryptico.umd.js",
-  "module": "dist/cryptico.es5.js",
-  "types": "dist/types/cryptico.d.ts",
-  "browser": "dist/cryptico.iife.js",
-  "files": [
-    "lib"
-  ],
-  "type": "module",
+  "main": "cryptico.js",
+  "module": "cryptico.mjs",
+  "types": "types/cryptico.d.ts",
+  "browser": "cryptico.iife.js",
   "scripts": {
-    "build": "rollup -c rollup.config.js",
+    "build": "shx rm -rf dist && npm run build:native && npm run build:node",
+    "build:native": "shx rm -rf dist/native && rollup -c rollup.config.js && shx mkdir -p dist/native/types && shx cp dist/types/cryptico.d.ts dist/native/types/ && shx cp package.json dist/native && shx cp README.md dist/native",
+    "build:node": "shx rm -rf dist/node && rollup -c rollup.config.js --environment NODEJS && shx mkdir dist/node/types && shx cp dist/types/cryptico.d.ts dist/native/types/ && shx cp package.json dist/node && rjp dist/node/package.json name @daotl/cryptico-node && shx cp README.md dist/node",
     "serve": "vite preview",
     "lint": "eslint '{src,test}/**/*.ts'",
     "lint:fix": "eslint '{src,test}/**/*.ts' --fix",
-    "prepack": "npm run lint && npm run build"
+    "pub": "npm run lint && npm run pub:native && npm run pub:node",
+    "pub:native": "cd dist/native && npm publish --access public && cd ../..",
+    "pub:node": "cd dist/node && npm publish --access public && cd ../.."
   },
   "prettier": "@daotl/prettier-config",
   "repository": {
@@ -57,9 +57,12 @@
   "devDependencies": {
     "@daotl/eslint-config": "^0.1.1",
     "@types/node": "^15.6.1",
+    "replace-json-property": "^1.6.3",
     "rollup": "^2.51.1",
     "rollup-plugin-dts": "^3.0.2",
+    "rollup-plugin-inject-process-env": "^1.3.1",
     "rollup-plugin-typescript2": "^0.30.0",
+    "shx": "^0.3.3",
     "sucrase": "^3.18.2",
     "ts-node": "^10.0.0",
     "typescript": "^4.3.2"

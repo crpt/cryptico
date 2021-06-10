@@ -6,5 +6,5 @@
     "declarationDir": "dist/types",
     "outDir": "dist"
   },
-  "exclude": ["rollup.config.ts"]
+  "exclude": ["test/**/*.ts", "test/**/*.d.ts", "rollup.config.ts"]
 }

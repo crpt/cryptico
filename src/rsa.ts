@@ -294,7 +294,7 @@ export function pkcs1unpad2(d: BigInteger, n: number): string | null {
 // included in all copies or substantial portions of the Software.
 //
 // Depends on:
-//   function sha1.hex(s) of sha1.js
+//   function sha1(s) of sha1.js
 //   jsbn.js
 //   jsbn2.js
 //   rsa.js
@@ -315,8 +315,8 @@ const _RSASIGN_DIHEAD = <const>{
   // sha512: '3051300d060960864801650304020305000440',
 }
 const _RSASIGN_HASHHEXFUNC = <const>{
-  sha1: sha1.hex,
-  sha256: sha256.hex,
+  sha1,
+  sha256,
 }
 type HashAlg = keyof typeof _RSASIGN_HASHHEXFUNC
 
