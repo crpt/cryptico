@@ -47,7 +47,7 @@ export default [
   },
   {
     input: 'dist/types/index.d.ts',
-    output: [{ file: 'dist/types/cryptico.d.ts' }],
+    output: [{ file: 'dist/index.d.ts' }],
     plugins: [dts()],
   },
 ] as RollupOptions
