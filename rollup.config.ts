@@ -1,6 +1,7 @@
 import { RollupOptions } from 'rollup'
 import injectProcessEnv from 'rollup-plugin-inject-process-env'
 import typescript from 'rollup-plugin-typescript2'
+import { terser } from 'rollup-plugin-terser'
 import dts from 'rollup-plugin-dts'
 
 const env = process.env.NODEJS ? 'node' : 'native'
@@ -41,6 +42,7 @@ export default [
           },
         },
       }),
+      terser(),
     ],
   },
   {
