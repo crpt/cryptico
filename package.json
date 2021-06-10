@@ -10,7 +10,6 @@
     "build": "shx rm -rf dist && npm run build:native && npm run build:node",
     "build:native": "shx rm -rf dist/native && rollup -c rollup.config.js && shx cp dist/index.d.ts dist/native/ && shx cp package.json dist/native && shx cp README.md dist/native",
     "build:node": "shx rm -rf dist/node && rollup -c rollup.config.js --environment NODEJS && shx cp dist/index.d.ts dist/node/ && shx cp package.json dist/node && rjp dist/node/package.json name @daotl/cryptico-node && shx cp README.md dist/node",
-    "serve": "vite preview",
     "lint": "eslint '{src,test}/**/*.ts'",
     "lint:fix": "eslint '{src,test}/**/*.ts' --fix",
     "pub": "npm run lint && npm run pub:native && npm run pub:node",
