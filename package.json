@@ -1,6 +1,6 @@
 {
   "name": "@veikkos/cryptico",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Encryption/Decryption Library (AES/RSA, based on Cryptico) - with RSAKey deserialization fix",
   "main": "index.js",
   "module": "index.mjs",
